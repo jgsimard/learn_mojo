@@ -8,11 +8,12 @@ struct Measurement(Copyable & Movable, Writable):
     fn __str__(self) -> String:
         var min = Float32(self.min) / 10.0
         var max = Float32(self.max) / 10.0
-        var mean = Float32(self.sum) / 10.0 / Float32(self.n) 
+        var mean = Float32(self.sum) / 10.0 / Float32(self.n)
         return String(round(min, 1), "/", round(mean, 1), "/", round(max, 1))
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
+
 
 fn v1(file_path: String) raises -> String:
     var d = Dict[String, Measurement]()
@@ -33,5 +34,11 @@ fn v1(file_path: String) raises -> String:
             else:
                 d[city] = Measurement(val, val, val, 1)
 
-    return String("V1, Assab: ", d["Assab"], ", Detroit: ", d["Detroit"],  ", Veracruz: ", d["Veracruz"])
-    
+    return String(
+        "V1, Assab: ",
+        d["Assab"],
+        ", Detroit: ",
+        d["Detroit"],
+        ", Veracruz: ",
+        d["Veracruz"],
+    )

@@ -1,5 +1,6 @@
 import polars as pl
 
+
 def solve_1brc_polars_optimized(file_path: str):
     """
     Solves the One Billion Row Challenge using a corrected and optimized Polars implementation
@@ -9,10 +10,7 @@ def solve_1brc_polars_optimized(file_path: str):
         file_path: The path to the measurements.txt file.
     """
     # Define a precise schema for fast parsing and lower memory usage
-    schema = {
-        "station": pl.Categorical,
-        "measurement": pl.Float32
-    }
+    schema = {"station": pl.Categorical, "measurement": pl.Float32}
 
     # Lazily scan the CSV file.
     # The 'comment_char' argument has been removed for compatibility.
@@ -48,7 +46,7 @@ def solve_1brc_polars_optimized(file_path: str):
     )
 
     # Collect the results using the modern 'engine="streaming"' API for memory efficiency.
-    final_output = formatted_result.collect(engine='streaming')
+    final_output = formatted_result.collect(engine="streaming")
 
     print(final_output.head())
     # Efficiently print all formatted lines at once.
@@ -57,15 +55,18 @@ def solve_1brc_polars_optimized(file_path: str):
 
 if __name__ == "__main__":
     import time
-    
+
     file_to_process = "measurements.txt"
     try:
         # A simple check to see if the file is accessible
-        with open(file_to_process, 'r') as f:
+        with open(file_to_process, "r") as f:
             pass
     except FileNotFoundError:
         print(f"Error: The data file '{file_to_process}' was not found.")
-        print("Please generate it first using the original 1BRC repository script.")
+        print(
+            "Please generate it first using the original 1BRC repository"
+            " script."
+        )
     else:
         start_time = time.time()
         solve_1brc_polars_optimized(file_to_process)

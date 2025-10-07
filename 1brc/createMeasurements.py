@@ -431,28 +431,29 @@ class CreateMeasurement:
         self.rng = np.random.default_rng()
 
     def generate_batch(
-            self,
-            std_dev: float = 10,
-            records: int = 10_000_000
+        self, std_dev: float = 10, records: int = 10_000_000
     ) -> pl.DataFrame:
         batch = self.stations.sample(
             records,
             with_replacement=True,
             shuffle=True,
-            seed=self.rng.integers(np.iinfo(np.int64).max)
+            seed=self.rng.integers(np.iinfo(np.int64).max),
         )
-        batch = batch.with_columns(temperature=self.rng.normal(batch["means"], std_dev))
+        batch = batch.with_columns(
+            temperature=self.rng.normal(batch["means"], std_dev)
+        )
         return batch.drop("means")
 
     def generate_measurement_file(
-            self,
-            file_name: str = "measurements.txt",
-            records: int = 1_000_000_000,
-            sep: str = ";",
-            std_dev: float = 10,
+        self,
+        file_name: str = "measurements.txt",
+        records: int = 1_000_000_000,
+        sep: str = ";",
+        std_dev: float = 10,
     ) -> None:
         print(
-            f"Creating measurement file '{file_name}' with {records:,} measurements..."
+            f"Creating measurement file '{file_name}' with"
+            f" {records:,} measurements..."
         )
         start = time.time()
         batches = max(records // 10_000_000, 1)
@@ -462,10 +463,13 @@ class CreateMeasurement:
             for i in tqdm(range(batches)):
                 from_, to = batch_ends[i], batch_ends[i + 1]
                 data = self.generate_batch(std_dev, to - from_)
-                data.write_csv(f, separator=sep, float_precision=1, include_header=False)
+                data.write_csv(
+                    f, separator=sep, float_precision=1, include_header=False
+                )
 
             print(
-                f"Created file '{file_name}' with {to:,} measurements in {time.time() - start:.2f} seconds"
+                f"Created file '{file_name}' with {to:,} measurements in"
+                f" {time.time() - start:.2f} seconds"
             )
 
 
@@ -483,7 +487,6 @@ if __name__ == "__main__":
                 )
             else:
                 return value
-
 
     parser = argparse.ArgumentParser(description="Create measurement file")
     parser.add_argument(

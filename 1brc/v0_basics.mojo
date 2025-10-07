@@ -6,7 +6,13 @@ struct Measurement(Copyable & Movable, Writable):
     var n: Float32
 
     fn __str__(self) -> String:
-        return String(round(self.min, 1), "/", round(self.mean, 1), "/", round(self.max, 1))
+        return String(
+            round(self.min, 1),
+            "/",
+            round(self.mean, 1),
+            "/",
+            round(self.max, 1),
+        )
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
@@ -32,11 +38,17 @@ fn v0(file_path: String) raises -> String:
                 d[city] = m^
             else:
                 d[city] = Measurement(val, val, val, 1.0)
-    
+
     # var out_dict = Dict[String, String]()
     # for e in d.items():
     #     out_dict[e.key] = String(e.value)
 
     # return out_dict^
-    return String("V0, Assab: ", d["Assab"], ", Detroit: ", d["Detroit"],  ", Veracruz: ", d["Veracruz"])
-
+    return String(
+        "V0, Assab: ",
+        d["Assab"],
+        ", Detroit: ",
+        d["Detroit"],
+        ", Veracruz: ",
+        d["Veracruz"],
+    )
