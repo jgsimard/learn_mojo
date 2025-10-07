@@ -55,7 +55,7 @@ fn parse_station[
 
     # tail = scalar
     if start + simd_width > end:
-        var tail = String(bytes=data[start:end])
+        var tail = String(bytes=data[start:end-1])
         for l in tail.split("\n"):
             var station = l.split(";")
             var city = String(station[0])

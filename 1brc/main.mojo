@@ -37,9 +37,9 @@ fn main() raises:
     print(v2(file_path))
     # print(v3(file_path))
 
-    # print("V0 = ", run[bench_V0]().mean(Unit.ms))
-    # print("V1 = ", run[bench_V1]().mean(Unit.ms))
-
+    print("V0 = ", run[bench_V0](max_iters=10).mean(Unit.ms))
+    print("V1 = ", run[bench_V1](max_iters=10).mean(Unit.ms))
+    print("V2 = ", run[bench_V2](max_iters=10).mean(Unit.ms))
     # var report2 = run[bench_V2]()
     # report2.print(Unit.ms)
     # print("V2 = ", report.mean(Unit.ms))
