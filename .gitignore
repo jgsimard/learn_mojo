@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+
+# Mojo
+*kgen.trace.json.time-events.txt
+*kgen.trace.json.time-trace
+
+*measurements.txt
