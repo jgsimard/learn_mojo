@@ -5,6 +5,12 @@ struct Measurement(Copyable & Movable, Writable):
     var max: Float32
     var n: Float32
 
+    fn update(mut self, val: Float32):
+        self.min = min(val, self.min)
+        self.max = max(val, self.max)
+        self.mean = (self.mean * self.n + val) / (self.n + 1.0)
+        self.n += 1.0
+
     fn __str__(self) -> String:
         return String(
             round(self.min, 1),
@@ -23,19 +29,12 @@ fn v0(file_path: String) raises -> String:
     with open(file_path, "r") as f:
         var lines = f.read().split("\n")
         for l in lines:
-            var ss = l.split(";")
-            var city = String(ss[0])
-            var val = Float32(atof(ss[1]))
+            var station = l.split(";")
+            var city = String(station[0])
+            var val = Float32(atof(station[1]))
             var bob = d.get(city)
             if bob:
-                var m = bob.value().copy()
-                if val < m.min:
-                    m.min = val
-                elif val > m.max:
-                    m.max = val
-                m.mean = (m.mean * m.n + val) / (m.n + 1.0)
-                m.n += 1.0
-                d[city] = m^
+                d[city].update(val)
             else:
                 d[city] = Measurement(val, val, val, 1.0)
 
