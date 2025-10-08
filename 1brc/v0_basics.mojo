@@ -44,7 +44,7 @@ fn v0(file_path: String) raises -> String:
 
     # return out_dict^
     return String(
-        "V0, Assab: ",
+        "v0, Assab: ",
         d["Assab"],
         ", Detroit: ",
         d["Detroit"],

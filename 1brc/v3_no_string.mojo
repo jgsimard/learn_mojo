@@ -44,7 +44,7 @@ fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
     return h
 
 
-fn v4(file_path: String) raises -> String:
+fn v3(file_path: String) raises -> String:
     var d = Dict[UInt64, Measurement](power_of_two_initial_capacity=1024)
     var city_names = Dict[UInt64, String](
         power_of_two_initial_capacity=1024
@@ -158,7 +158,7 @@ fn v4(file_path: String) raises -> String:
     )
 
     return String(
-        "V4",
+        "v3",
         ", Assab: ",
         d[hash_assab],
         ", Detroit: ",

@@ -35,7 +35,7 @@ fn v1(file_path: String) raises -> String:
                 d[city] = Measurement(val, val, val, 1)
 
     return String(
-        "V1, Assab: ",
+        "v1, Assab: ",
         d["Assab"],
         ", Detroit: ",
         d["Detroit"],

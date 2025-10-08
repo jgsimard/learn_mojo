@@ -10,14 +10,13 @@
 
 
 ## Summary
-
-| Version | What Changed ? | Timings | Improvement |   |
-|---------|----------------|---------|-------------|---|
-| v0      |                | 15.19    |             |   |
-| v1      |Parse Temperature as Int | 12.30 | |
-| v2      | SIMD 1        |  6.63    |             |   |
-| v3      | SIMD 2        |  6.61    |             |   |
-| v4      | less string   |  4.37    |             |   |
-| v5      | register_passable        |  3.21    |             |   |
+Timings for 1_000_000 rows (ms)
+| Version | What Changed ?                      | Timings |
+|---------|-------------------------------------|---------|
+| v0      |                                     |161.7    |
+| v1      |Parse Temperature as Int             |130.6    |
+| v2      |SIMD                                 | 73.3    |
+| v3      |less string                          | 49.2    |
+| v4      |register_passable + contains in Dict | 31.5    |
 
 

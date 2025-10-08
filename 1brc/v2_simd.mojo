@@ -111,7 +111,7 @@ fn parse_station[
     return stations^
 
 
-fn v3(file_path: String) raises -> String:
+fn v2(file_path: String) raises -> String:
     var d = Dict[String, Measurement]()
     var file = open(file_path, "r")
     var data = Span[mut=False](file.read_bytes())
@@ -130,7 +130,7 @@ fn v3(file_path: String) raises -> String:
             else:
                 d[city] = Measurement(val)
     return String(
-        "V3, Assab: ",
+        "v2, Assab: ",
         d["Assab"],
         ", Detroit: ",
         d["Detroit"],
