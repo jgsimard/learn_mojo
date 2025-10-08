@@ -58,7 +58,6 @@ fn parse_station[
         start = end
         return stations^
 
-
     var chunk = data_ptr.load[width=simd_width](start)
     var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
     var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
