@@ -7,12 +7,8 @@ from v2_simd_1 import v2
 from v3_simd_2 import v3
 from v4_no_string import v4
 from v5_register_passable import v5
-# from math import min, max
 
 alias file_path = "./measurements.txt"
-# alias simd_width = simd_width_of[UInt8]()
-
-# The program should print out the min, mean, and max values per station, alphabetically ordered like so:
 
 
 fn bench_v0() raises:
@@ -39,15 +35,10 @@ fn bench_v5() raises:
     var d = v5(file_path)
 
 
-fn bench_v6() raises:
-    var d = v6(file_path)
-
-
 fn count_lines_in_memory(filename: String) raises -> Int:
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         var lines = f.read().split("\n")
         return len(lines)
-
 
 
 fn main() raises:
@@ -62,16 +53,46 @@ fn main() raises:
     print(v3(file_path))
     print(v4(file_path))
     print(v5(file_path))
-    
+
     var t0 = run[bench_v0](max_iters=10).mean(Unit.ms)
-    print("v0 = ", round(t0, 3), "estimated time for 1B (s) = ", round(t0 * factor / 1000.0, 3))
+    print(
+        "v0 = ",
+        round(t0, 3),
+        "estimated time for 1B (s) = ",
+        round(t0 * factor / 1000.0, 3),
+    )
     var t1 = run[bench_v1](max_iters=10).mean(Unit.ms)
-    print("v1 = ", round(t1, 3), "estimated time for 1B (s) = ", round(t1 * factor / 1000.0, 3))
+    print(
+        "v1 = ",
+        round(t1, 3),
+        "estimated time for 1B (s) = ",
+        round(t1 * factor / 1000.0, 3),
+    )
     var t2 = run[bench_v2](max_iters=10).mean(Unit.ms)
-    print("v2 = ", round(t2, 3), "estimated time for 1B (s) = ", round(t2 * factor / 1000.0, 3))
+    print(
+        "v2 = ",
+        round(t2, 3),
+        "estimated time for 1B (s) = ",
+        round(t2 * factor / 1000.0, 3),
+    )
     var t3 = run[bench_v3](max_iters=10).mean(Unit.ms)
-    print("v3 = ", round(t3, 3), "estimated time for 1B (s) = ", round(t3 * factor / 1000.0, 3))
+    print(
+        "v3 = ",
+        round(t3, 3),
+        "estimated time for 1B (s) = ",
+        round(t3 * factor / 1000.0, 3),
+    )
     var t4 = run[bench_v4](max_iters=10).mean(Unit.ms)
-    print("v4 = ", round(t4, 3), "estimated time for 1B (s) = ", round(t4 * factor / 1000.0, 3))
+    print(
+        "v4 = ",
+        round(t4, 3),
+        "estimated time for 1B (s) = ",
+        round(t4 * factor / 1000.0, 3),
+    )
     var t5 = run[bench_v5](max_iters=10).mean(Unit.ms)
-    print("v5 = ", round(t5, 3), "estimated time for 1B (s) = ", round(t5 * factor / 1000.0, 3))
+    print(
+        "v5 = ",
+        round(t5, 3),
+        "estimated time for 1B (s) = ",
+        round(t5 * factor / 1000.0, 3),
+    )

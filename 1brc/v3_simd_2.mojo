@@ -49,7 +49,7 @@ fn parse_station[
 
     # tail = scalar
     if start + simd_width > end:
-        var tail = String(bytes=data[start:end-1])
+        var tail = String(bytes=data[start : end - 1])
         for l in tail.split("\n"):
             var station = l.split(";")
             var city = String(station[0])
@@ -81,8 +81,8 @@ fn parse_station[
             )
 
             # parse value
-            alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1) # dd.d
-            alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0) # d.d
+            alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1)  # dd.d
+            alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0)  # d.d
 
             var val_start_idx = start + semicolon_idx + 1
             var num_len = newline_idx - (semicolon_idx + 1)
@@ -91,7 +91,9 @@ fn parse_station[
             var sign = 1 - (Int(is_neg) << 1)
 
             var val_abs_start = val_start_idx + Int(is_neg)
-            var digits = SIMD[DType.int32, 4](data_ptr.load[width=4](val_abs_start) - ZERO)
+            var digits = SIMD[DType.int32, 4](
+                data_ptr.load[width=4](val_abs_start) - ZERO
+            )
             var val_long = (digits * vec_3d).reduce_add()
             var val_short = (digits * vec_2d).reduce_add()
 
