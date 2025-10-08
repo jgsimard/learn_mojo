@@ -13,7 +13,11 @@
 
 | Version | What Changed ? | Timings | Improvement |   |
 |---------|----------------|---------|-------------|---|
-| v0      |                | 28.0    |             |   |
-| v1      |Parse Temperature as Int | 12.5 | |
-| v2      | SIMD 1        |  6.7    |             |   |
+| v0      |                | 15.19    |             |   |
+| v1      |Parse Temperature as Int | 12.30 | |
+| v2      | SIMD 1        |  6.63    |             |   |
+| v3      | SIMD 2        |  6.61    |             |   |
+| v4      | less string   |  4.37    |             |   |
+| v5      | register_passable        |  3.21    |             |   |
+
 
