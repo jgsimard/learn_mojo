@@ -34,7 +34,7 @@ struct Measurement(Copyable, Movable, Writable):
 
 
 # alias simd_width = simd_width_of[DType.uint8]()
-alias simd_width = 32
+alias simd_width = 64
 
 
 fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
@@ -47,15 +47,12 @@ fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
 
 fn v5(file_path: String) raises -> String:
     var d = Dict[UInt64, Measurement](power_of_two_initial_capacity=1024)
-    var city_names = Dict[UInt64, String](
-        power_of_two_initial_capacity=1024
-    )  # Only for final output
+    var city_names = Dict[UInt64, String](power_of_two_initial_capacity=1024)
     var file = open(file_path, "r")
     var data = Span[mut=False](file.read_bytes())
 
     var start: Int = 0
     var end = len(data) - 1
-    var i = 0
 
     alias middle = ord(";")
     alias new_line = ord("\n")
@@ -88,8 +85,8 @@ fn v5(file_path: String) raises -> String:
             break
 
         var chunk = data_ptr.load[width=simd_width](start)
-        var newlines = pack_bits[DType.uint32](chunk.eq(new_line))
-        var semicolons = pack_bits[DType.uint32](chunk.eq(middle))
+        var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
+        var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
 
         var start_of_line_idx = 0
 
@@ -129,7 +126,7 @@ fn v5(file_path: String) raises -> String:
                     val_short * Int(is_short) + val_long * Int(not is_short)
                 )
 
-                if d.get(hash_city):
+                if hash_city in d:
                     d[hash_city].update(Int(val))
                 else:
                     d[hash_city] = Measurement(Int(val))
