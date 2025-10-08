@@ -32,7 +32,7 @@ struct Measurement(Copyable, Movable, Writable):
 
 
 # alias simd_width = simd_width_of[DType.uint8]()
-alias simd_width = 32
+alias simd_width = 64
 
 
 fn parse_station[
@@ -58,10 +58,10 @@ fn parse_station[
         start = end
         return stations^
 
-    # print(String(bytes=data_span[pos: pos + simd_width]))
+
     var chunk = data_ptr.load[width=simd_width](start)
-    var newlines = pack_bits[DType.uint32](chunk.eq(new_line))
-    var semicolons = pack_bits[DType.uint32](chunk.eq(middle))
+    var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
+    var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
 
     var start_of_line_idx = 0
 
@@ -119,8 +119,7 @@ fn v2(file_path: String) raises -> String:
 
     var position: Int = 0
     var end = len(data)
-    var i = 0
-    var N = 1000005
+
     while position < end:
         var stations = parse_station[simd_width](data, position, end)
         for station in stations:
@@ -132,14 +131,6 @@ fn v2(file_path: String) raises -> String:
             else:
                 d[city] = Measurement(val)
 
-            i += 1
-            if i > N:
-                # if i > 1000005:
-                print("trop long")
-                print(len(d))
-                break
-        if i > N:
-            break
     return String(
         "V2, Assab: ",
         d["Assab"],

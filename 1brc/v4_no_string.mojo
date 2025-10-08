@@ -33,7 +33,7 @@ struct Measurement(Copyable, Movable, Writable):
 
 
 # alias simd_width = simd_width_of[DType.uint8]()
-alias simd_width = 32
+alias simd_width = 64
 
 
 fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
@@ -87,8 +87,8 @@ fn v4(file_path: String) raises -> String:
             break
 
         var chunk = data_ptr.load[width=simd_width](start)
-        var newlines = pack_bits[DType.uint32](chunk.eq(new_line))
-        var semicolons = pack_bits[DType.uint32](chunk.eq(middle))
+        var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
+        var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
 
         var start_of_line_idx = 0
 
