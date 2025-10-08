@@ -81,6 +81,9 @@ fn parse_station[
             )
 
             # parse value
+            alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1) # dd.d
+            alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0) # d.d
+
             var val_start_idx = start + semicolon_idx + 1
             var num_len = newline_idx - (semicolon_idx + 1)
 
@@ -88,20 +91,16 @@ fn parse_station[
             var sign = 1 - (Int(is_neg) << 1)
 
             var val_abs_start = val_start_idx + Int(is_neg)
-            var digits = data_ptr.load[width=4](val_abs_start) - ZERO
-            var d0 = Int(digits[0])
-            var d1 = Int(digits[1])
-            var d2 = Int(digits[2])
-            var d3 = Int(digits[3])
+            var digits = SIMD[DType.int32, 4](data_ptr.load[width=4](val_abs_start) - ZERO)
+            var val_long = (digits * vec_3d).reduce_add()
+            var val_short = (digits * vec_2d).reduce_add()
 
             var is_short = (num_len - Int(is_neg)) == 3  # d.d
-            var val_short = d0 * 10 + d2
-            var val_long = d0 * 100 + d1 * 10 + d3
             var val = sign * (
                 val_short * Int(is_short) + val_long * Int(not is_short)
             )
 
-            stations.append((city, val))
+            stations.append((city, Int(val)))
 
         start_of_line_idx = Int(newline_idx) + 1
         newlines &= ~(1 << newline_idx)
@@ -111,7 +110,7 @@ fn parse_station[
     return stations^
 
 
-fn v2(file_path: String) raises -> String:
+fn v3(file_path: String) raises -> String:
     var d = Dict[String, Measurement]()
     var file = open(file_path, "r")
     var data = Span[mut=False](file.read_bytes())
@@ -141,7 +140,7 @@ fn v2(file_path: String) raises -> String:
         if i > N:
             break
     return String(
-        "V2, Assab: ",
+        "V3, Assab: ",
         d["Assab"],
         ", Detroit: ",
         d["Detroit"],
