@@ -215,3 +215,5 @@ __marimo__/
 *kgen.trace.json.time-trace
 
 *measurements.txt
+
+.vscode/
