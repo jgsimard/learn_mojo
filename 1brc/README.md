@@ -11,12 +11,15 @@
 
 ## Summary
 Timings for 1_000_000 rows (ms)
-| Version | What Changed ?                      | Timings |
-|---------|-------------------------------------|---------|
-| v0      |                                     |161.7    |
-| v1      |Parse Temperature as Int             |130.6    |
-| v2      |SIMD                                 | 73.3    |
-| v3      |less string                          | 49.2    |
-| v4      |register_passable + contains in Dict | 31.5    |
+| Version | What Changed ?                      | Timings | Improvement |
+|---------|-------------------------------------|---------|-------------|
+| v0      |                                     |161.1    |      1.0    |
+| v1      |Parse Temperature as Int             |130.3    |      1.2    |
+| v2      |SIMD                                 | 73.0    |      2.2    |
+| v3      |less string                          | 48.3    |      3.3    |
+| v4      |register_passable + contains in Dict | 31.5    |      5.1    |
+| v5      |SIMD 2                               | 31.4    |      5.1    |
+| v6      |parallel (8 cores)                   |  9.4    |     17.2    |
+| v4      |Memory mapped file (MMap)            |  4.5    |     35.8    |
 
 
