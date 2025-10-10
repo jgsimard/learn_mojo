@@ -20,6 +20,8 @@ fn v1(file_path: String) raises -> String:
     with open(file_path, "r") as f:
         var lines = f.read().split("\n")
         for l in lines:
+            if len(l) == 0:
+                continue
             var station = l.split(";")
             var city = String(station[0])
             var val = atol(station[1].replace(".", ""))
@@ -64,7 +66,7 @@ fn format_output(d: Dict[String, Measurement]) raises -> String:
         var measurement = d[city].copy()
         
         if i > 0:
-            result += ", "
+            result += ", \n"
         
         result += city + "=" + String(measurement)
     

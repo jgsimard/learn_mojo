@@ -1,6 +1,7 @@
 from benchmark import run, Unit
 import time
 from sys import num_physical_cores
+from compile.reflection import get_linkage_name
 
 
 from v0_basics import v0
@@ -47,22 +48,43 @@ fn bench_v6() raises:
 fn bench_v7() raises:
     var d = v7(file_path)
 
+fn process_and_save[func: fn(String) raises -> String, name: String]() raises:
+    var output = func(file_path)
+    var output_hash = hash(output)
+
+    print("hash ", name, " : ", output_hash)
+
+    var filename = String("output_", name, ".txt")
+    with open(filename, "w") as f:
+        f.write(output)
+
 
 fn main() raises:
     var nb_lines = 1_000_000
     print("Nb lines = ", nb_lines)
     print("Nb cores = ", num_physical_cores())
 
-    # print(v0(file_path))
-    # print(v1(file_path))
-    print("hash v1 : ", hash(v1(file_path)))
-    print("hash v2 : ", hash(v2(file_path)))
-    print("hash v3 : ", hash(v3(file_path)))
-    print("hash v4 : ", hash(v4(file_path)))
-    print("hash v5 : ", hash(v5(file_path)))
-    print("hash v6 : ", hash(v6(file_path)))
-    # print(v7(file_path))
-    print("hash v7 : ", hash(v7(file_path)))
+    process_and_save[v0, "v0"]()
+    process_and_save[v1, "v1"]()
+    process_and_save[v2, "v2"]()
+    process_and_save[v3, "v3"]()
+    process_and_save[v4, "v4"]()
+    process_and_save[v5, "v5"]()
+    process_and_save[v6, "v6"]()
+    process_and_save[v7, "v7"]()
+    
+    # # print(v0(file_path))
+    # print("hash v0 : ", hash(v0(file_path)))
+    # # print(v1(file_path))
+    # print("hash v1 : ", hash(v1(file_path)))
+    # print("hash v2 : ", hash(v2(file_path)))
+    # print("hash v3 : ", hash(v3(file_path)))
+    # print("hash v4 : ", hash(v4(file_path)))
+    # print("hash v5 : ", hash(v5(file_path)))
+    # print("hash v6 : ", hash(v6(file_path)))
+    # # print(v7(file_path))
+    # print("hash v7 : ", hash(v7(file_path)))
+
 
     # var t0 = 628.5
     # var t0 = run[bench_v0](max_iters=10).mean(Unit.ms)

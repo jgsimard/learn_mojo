@@ -51,6 +51,8 @@ fn parse_station[
     if start + simd_width > end:
         var tail = String(bytes=data[start : end - 1])
         for l in tail.split("\n"):
+            if len(l) == 0:
+                continue
             var station = l.split(";")
             var city = String(station[0])
             var val = atol(station[1].replace(".", ""))
@@ -159,7 +161,7 @@ fn format_output(d: Dict[String, Measurement]) raises -> String:
         var measurement = d[city].copy()
         
         if i > 0:
-            result += ", "
+            result += ", \n"
         
         result += city + "=" + String(measurement)
     

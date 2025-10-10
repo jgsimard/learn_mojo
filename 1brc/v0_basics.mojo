@@ -1,11 +1,11 @@
 @fieldwise_init
 struct Measurement(Copyable & Movable, Writable):
-    var min: Float32
-    var mean: Float32
-    var max: Float32
-    var n: Float32
+    var min: Float64
+    var mean: Float64
+    var max: Float64
+    var n: Float64
 
-    fn update(mut self, val: Float32):
+    fn update(mut self, val: Float64):
         self.min = min(val, self.min)
         self.max = max(val, self.max)
         self.mean = (self.mean * self.n + val) / (self.n + 1.0)
@@ -29,25 +29,51 @@ fn v0(file_path: String) raises -> String:
     with open(file_path, "r") as f:
         var lines = f.read().split("\n")
         for l in lines:
+            if len(l) == 0:
+                continue
             var station = l.split(";")
             var city = String(station[0])
-            var val = Float32(atof(station[1]))
+            var val = atof(station[1])
             var bob = d.get(city)
             if bob:
                 d[city].update(val)
             else:
                 d[city] = Measurement(val, val, val, 1.0)
 
-    # var out_dict = Dict[String, String]()
-    # for e in d.items():
-    #     out_dict[e.key] = String(e.value)
+    var output = format_output(d)
+    return output
 
-    # return out_dict^
-    return String(
-        "v0, Assab: ",
-        d["Assab"],
-        ", Detroit: ",
-        d["Detroit"],
-        ", Veracruz: ",
-        d["Veracruz"],
-    )
+
+fn format_output(d: Dict[String, Measurement]) raises -> String:
+    """Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
+    
+    Cities are sorted alphabetically.
+    """
+    # Collect all city names and sort them
+    var cities = List[String]()
+    for entry in d.items():
+        cities.append(entry.key)
+    
+    # Simple bubble sort
+    var n = len(cities)
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if cities[j] > cities[j + 1]:
+                var temp = cities[j]
+                cities[j] = cities[j + 1]
+                cities[j + 1] = temp
+    
+    # Build output string
+    var result = String("{")
+    
+    for i in range(len(cities)):
+        var city = cities[i]
+        var measurement = d[city].copy()
+        
+        if i > 0:
+            result += ", \n"
+        
+        result += city + "=" + String(measurement)
+    
+    result += "}"
+    return result
