@@ -6,6 +6,7 @@ from algorithm import parallelize
 from sys import num_physical_cores
 
 
+
 @register_passable("trivial")
 struct Measurement(Copyable, Movable, Writable):
     var min: Int
@@ -69,28 +70,7 @@ fn process_chunk(
     var data_ptr = data.unsafe_ptr()
     var pos = start
 
-    while pos < end:
-        # tail = scalar
-        if pos + simd_width > end:
-            var tail = String(bytes=data[pos : end - 1])
-            for l in tail.split("\n"):
-                var station = l.split(";")
-                var city = String(station[0])
-                var val = atol(station[1].replace(".", ""))
-
-                # Hash the city for tail processing
-                var city_bytes = city.as_bytes()
-                var hash_city = fast_hash(
-                    city_bytes.unsafe_ptr(), len(city_bytes)
-                )
-
-                if d.get(hash_city):
-                    d[hash_city].update(val)
-                else:
-                    d[hash_city] = Measurement(val)
-                    city_names[hash_city] = city
-            break
-
+    while pos + simd_width < end:
         var chunk = data_ptr.load[width=simd_width](pos)
         var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
         var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
@@ -156,6 +136,26 @@ fn process_chunk(
 
         pos += start_of_line_idx
 
+    # tail = scalar
+    if pos < end:
+        var tail = String(bytes=data[pos : end - 1])
+        for l in tail.split("\n"):
+            var station = l.split(";")
+            var city = String(station[0])
+            var val = atol(station[1].replace(".", ""))
+
+            # Hash the city for tail processing
+            var city_bytes = city.as_bytes()
+            var hash_city = fast_hash(
+                city_bytes.unsafe_ptr(), len(city_bytes)
+            )
+
+            if d.get(hash_city):
+                d[hash_city].update(val)
+            else:
+                d[hash_city] = Measurement(val)
+                city_names[hash_city] = city
+
 
 fn find_next_newline(data: Span[UInt8], start: Int) -> Int:
     """Find the next newline after start position."""
@@ -166,13 +166,8 @@ fn find_next_newline(data: Span[UInt8], start: Int) -> Int:
 
 
 fn v6(file_path: String) raises -> String:
-    var d = Dict[UInt64, Measurement](power_of_two_initial_capacity=1024)
-    var city_names = Dict[UInt64, String](power_of_two_initial_capacity=1024)
     var file = open(file_path, "r")
     var data = Span[mut=False](file.read_bytes())
-
-    var start: Int = 0
-    var end = len(data) - 1
 
     var num_workers = num_physical_cores()
     var chunk_size = len(data) // num_workers
@@ -242,23 +237,51 @@ fn v6(file_path: String) raises -> String:
                     hash_key
                 ]
 
-    # Hash the lookup cities
-    var assab_bytes = String("Assab").as_bytes()
-    var detroit_bytes = String("Detroit").as_bytes()
-    var veracruz_bytes = String("Veracruz").as_bytes()
+    var output = format_output(final_dict, final_city_names)
+    return output^
 
-    var hash_assab = fast_hash(assab_bytes.unsafe_ptr(), len(assab_bytes))
-    var hash_detroit = fast_hash(detroit_bytes.unsafe_ptr(), len(detroit_bytes))
-    var hash_veracruz = fast_hash(
-        veracruz_bytes.unsafe_ptr(), len(veracruz_bytes)
-    )
 
-    return String(
-        "v6",
-        ", Assab: ",
-        final_dict[hash_assab],
-        ", Detroit: ",
-        final_dict[hash_detroit],
-        ", Veracruz: ",
-        final_dict[hash_veracruz],
-    )
+
+fn format_output(
+    final_dict: Dict[UInt64, Measurement],
+    city_names: Dict[UInt64, String],
+) raises -> String:
+    """Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
+    
+    Cities are sorted alphabetically.
+    """
+    # Collect all city names and sort them
+    var cities = List[String]()
+    for entry in city_names.items():
+        cities.append(entry.value)
+    
+    # Simple bubble sort (you could use a more efficient sort if needed)
+    var n = len(cities)
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if cities[j] > cities[j + 1]:
+                var temp = cities[j]
+                cities[j] = cities[j + 1]
+                cities[j + 1] = temp
+    
+    # Build output string
+    var result = String("{")
+    
+    for i in range(len(cities)):
+        var city = cities[i]
+        
+        # Get the hash for this city
+        var city_bytes = city.as_bytes()
+        var hash_city = fast_hash(city_bytes.unsafe_ptr(), len(city_bytes))
+        
+        # Get the measurement
+        var measurement = final_dict[hash_city]
+        
+        # Add to result
+        if i > 0:
+            result += ", "
+        
+        result += city + "=" + String(measurement)
+    
+    result += "}"
+    return result
