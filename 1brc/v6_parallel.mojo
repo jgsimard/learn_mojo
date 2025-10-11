@@ -41,8 +41,8 @@ struct Measurement(Copyable, Movable, Writable):
         writer.write(self.__str__())
 
 
-# alias simd_width = simd_width_of[DType.uint8]()
-alias simd_width = 64
+alias simd_width = simd_width_of[DType.uint8]()
+alias bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
 
 fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
@@ -68,28 +68,30 @@ fn process_chunk(
 
     var data_ptr = data.unsafe_ptr()
     var pos = start
+    var line_start = pos
 
     while pos + simd_width < end:
         var chunk = data_ptr.load[width=simd_width](pos)
-        var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
-        var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
+        var newlines = pack_bits[bits_type](chunk.eq(new_line))
+        var semicolons = pack_bits[bits_type](chunk.eq(middle))
+
+        if newlines == 0:
+            # to no break temperature in two chunks
+            pos += Int(count_leading_zeros(semicolons))
+            continue
 
         var start_of_line_idx = 0
 
         while newlines != 0:
             var newline_idx = count_trailing_zeros(newlines)
-
             var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
 
             # Parse city
             var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
-            var city_len = Int(semicolon_idx) - start_of_line_idx
-            var hash_city = fast_hash(
-                data_ptr + pos + start_of_line_idx, city_len
-            )
+            var city_len = pos + Int(semicolon_idx) - line_start
+            var hash_city = fast_hash(data_ptr + line_start, city_len)
 
             # parse value
-            # interlived version of
             alias vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
             alias vec_2d = SIMD[DType.int16, 4](10, 0, 1, 0)  # d.dX
             alias vec_digits = vec_3d.interleave(vec_2d)
@@ -110,12 +112,7 @@ fn process_chunk(
             var vals = (digits_8 * vec_digits).reduce_add[2]()
 
             var is_short = (num_len - Int(is_neg)) == 3  # d.d
-            # a little bit slower with the following simd
-            # var mask = SIMD[DType.int16, 2](Int(not is_short), Int(is_short))
-            # var val_abs = (vals * mask).reduce_add()
-            var val_abs = vals[0] * Int(not is_short) + vals[1] * Int(
-                is_short
-            )
+            var val_abs = vals[0] * Int(not is_short) + vals[1] * Int(is_short)
             var val = sign * val_abs
 
             if hash_city in d:
@@ -123,12 +120,11 @@ fn process_chunk(
             else:
                 d[hash_city] = Measurement(Int(val))
                 city_names[hash_city] = String(
-                    bytes=data[
-                        pos + start_of_line_idx : pos + Int(semicolon_idx)
-                    ]
+                    bytes=data[line_start : pos + Int(semicolon_idx)]
                 )
 
             start_of_line_idx = Int(newline_idx) + 1
+            line_start = pos + start_of_line_idx
             newlines &= ~(1 << newline_idx)
 
         pos += start_of_line_idx
