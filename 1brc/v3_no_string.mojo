@@ -150,39 +150,40 @@ fn v3(file_path: String) raises -> String:
     var output = format_output(d, city_names)
     return output^
 
+
 fn format_output(
     final_dict: Dict[UInt64, Measurement],
     city_names: Dict[UInt64, String],
 ) raises -> String:
     """Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
-    
+
     Cities are sorted alphabetically.
     """
     # Collect all city names and sort them
     var cities = List[String]()
     for entry in city_names.items():
         cities.append(entry.value)
-    
+
     sort(cities)
-    
+
     # Build output string
     var result = String("{")
-    
+
     for i in range(len(cities)):
         var city = cities[i]
-        
+
         # Get the hash for this city
         var city_bytes = city.as_bytes()
         var hash_city = fast_hash(city_bytes.unsafe_ptr(), len(city_bytes))
-        
+
         # Get the measurement
         var measurement = final_dict[hash_city].copy()
-        
+
         # Add to result
         if i > 0:
             result += ", \n"
-        
+
         result += city + "=" + String(measurement)
-    
+
     result += "}"
     return result

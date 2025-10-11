@@ -15,7 +15,8 @@ from v8_swar import v8
 
 alias file_path = "./measurements.txt"
 
-fn process_and_save[func: fn(String) raises -> String, name: String]() raises:
+
+fn process_and_save[func: fn (String) raises -> String, name: String]() raises:
     var output = func(file_path)
     var output_hash = hash(output)
 
@@ -25,17 +26,24 @@ fn process_and_save[func: fn(String) raises -> String, name: String]() raises:
     with open(filename, "w") as f:
         f.write(output)
 
-fn bench[v: fn(String) raises -> String]() raises:
+
+fn bench[v: fn (String) raises -> String]() raises:
     var d = v(file_path)
 
-fn bench_compare[v: fn(String) raises -> String, name: String](t0: Float64) raises:
+
+fn bench_compare[
+    v: fn (String) raises -> String, name: String
+](t0: Float64) raises:
     var t = run[bench[v]](max_iters=10).mean(Unit.ms)
     print(name, " = ", round(t, 1), ", X", round(t0 / t, 1))
+
 
 fn main() raises:
     var nb_lines = 1_000_000
     print("Nb lines = ", nb_lines)
     print("Nb cores = ", num_physical_cores())
+    # var line_start = pos  # Track where current line started
+    # alias bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
     process_and_save[v0, "v0"]()
     process_and_save[v1, "v1"]()
@@ -45,7 +53,7 @@ fn main() raises:
     process_and_save[v5, "v5"]()
     process_and_save[v6, "v6"]()
     process_and_save[v7, "v7"]()
-    process_and_save[v8, "v8"]()
+    # process_and_save[v8, "v8"]()
 
     # var t0 = 156.6
     # bench_compare[v0, "v0"](t0)

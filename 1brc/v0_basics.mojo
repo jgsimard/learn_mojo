@@ -46,27 +46,27 @@ fn v0(file_path: String) raises -> String:
 
 fn format_output(d: Dict[String, Measurement]) raises -> String:
     """Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
-    
+
     Cities are sorted alphabetically.
     """
     # Collect all city names and sort them
     var cities = List[String]()
     for entry in d.items():
         cities.append(entry.key)
-    
+
     sort(cities)
-    
+
     # Build output string
     var result = String("{")
-    
+
     for i in range(len(cities)):
         var city = cities[i]
         var measurement = d[city].copy()
-        
+
         if i > 0:
             result += ", \n"
-        
+
         result += city + "=" + String(measurement)
-    
+
     result += "}"
     return result

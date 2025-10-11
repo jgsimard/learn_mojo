@@ -5,7 +5,7 @@ from bit import count_leading_zeros, count_trailing_zeros
 
 
 @register_passable("trivial")
-struct Measurement(Copyable, Movable, Writable, Stringable):
+struct Measurement(Copyable, Movable, Stringable, Writable):
     var min: Int
     var max: Int
     var sum: Int
@@ -62,7 +62,7 @@ fn v5(file_path: String) raises -> String:
 
     var data_ptr = data.unsafe_ptr()
 
-    while start + simd_width < end: 
+    while start + simd_width < end:
         var chunk = data_ptr.load[width=simd_width](start)
         var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
         var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
@@ -142,9 +142,7 @@ fn v5(file_path: String) raises -> String:
 
             # Hash the city for tail processing
             var city_bytes = city.as_bytes()
-            var hash_city = fast_hash(
-                city_bytes.unsafe_ptr(), len(city_bytes)
-            )
+            var hash_city = fast_hash(city_bytes.unsafe_ptr(), len(city_bytes))
 
             if d.get(hash_city):
                 d[hash_city].update(val)
@@ -156,39 +154,41 @@ fn v5(file_path: String) raises -> String:
     return output^
 
 
-fn format_output[M: Stringable & Copyable & Movable](
+fn format_output[
+    M: Stringable & Copyable & Movable
+](
     final_dict: Dict[UInt64, M],
     city_names: Dict[UInt64, String],
 ) raises -> String:
     """Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
-    
+
     Cities are sorted alphabetically.
     """
     # Collect all city names and sort them
     var cities = List[String]()
     for entry in city_names.items():
         cities.append(entry.value)
-    
+
     sort(cities)
-    
+
     # Build output string
     var result = String("{")
-    
+
     for i in range(len(cities)):
         var city = cities[i]
-        
+
         # Get the hash for this city
         var city_bytes = city.as_bytes()
         var hash_city = fast_hash(city_bytes.unsafe_ptr(), len(city_bytes))
-        
+
         # Get the measurement
         var measurement = final_dict[hash_city].copy()
-        
+
         # Add to result
         if i > 0:
             result += ", \n"
-        
+
         result += city + "=" + String(measurement)
-    
+
     result += "}"
     return result
