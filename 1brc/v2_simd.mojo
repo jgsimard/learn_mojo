@@ -70,40 +70,38 @@ fn parse_station[
         var newline_idx = count_trailing_zeros(newlines)
 
         var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
-        var relevant_semicolons = semicolons & search_mask
 
-        if relevant_semicolons != 0:
-            # Parse city
-            var semicolon_idx = count_trailing_zeros(relevant_semicolons)
-            var city = String(
-                bytes=data[
-                    start + start_of_line_idx : start + Int(semicolon_idx)
-                ]
-            )
+        # Parse city
+        var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
+        var city = String(
+            bytes=data[
+                start + start_of_line_idx : start + Int(semicolon_idx)
+            ]
+        )
 
-            # parse value
-            alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1)  # dd.d
-            alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0)  # d.d
+        # parse value
+        alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1)  # dd.d
+        alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0)  # d.d
 
-            var val_start_idx = start + semicolon_idx + 1
-            var num_len = newline_idx - (semicolon_idx + 1)
+        var val_start_idx = start + semicolon_idx + 1
+        var num_len = newline_idx - (semicolon_idx + 1)
 
-            var is_neg = data[val_start_idx] == NEG
-            var sign = 1 - (Int(is_neg) << 1)
+        var is_neg = data[val_start_idx] == NEG
+        var sign = 1 - (Int(is_neg) << 1)
 
-            var val_abs_start = val_start_idx + Int(is_neg)
-            var digits = SIMD[DType.int32, 4](
-                data_ptr.load[width=4](val_abs_start) - ZERO
-            )
-            var val_long = (digits * vec_3d).reduce_add()
-            var val_short = (digits * vec_2d).reduce_add()
+        var val_abs_start = val_start_idx + Int(is_neg)
+        var digits = SIMD[DType.int32, 4](
+            data_ptr.load[width=4](val_abs_start) - ZERO
+        )
+        var val_long = (digits * vec_3d).reduce_add()
+        var val_short = (digits * vec_2d).reduce_add()
 
-            var is_short = (num_len - Int(is_neg)) == 3  # d.d
-            var val = sign * (
-                val_short * Int(is_short) + val_long * Int(not is_short)
-            )
+        var is_short = (num_len - Int(is_neg)) == 3  # d.d
+        var val = sign * (
+            val_short * Int(is_short) + val_long * Int(not is_short)
+        )
 
-            stations.append((city, Int(val)))
+        stations.append((city, Int(val)))
 
         start_of_line_idx = Int(newline_idx) + 1
         newlines &= ~(1 << newline_idx)

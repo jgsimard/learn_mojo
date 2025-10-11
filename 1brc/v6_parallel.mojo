@@ -80,55 +80,53 @@ fn process_chunk(
             var newline_idx = count_trailing_zeros(newlines)
 
             var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
-            var relevant_semicolons = semicolons & search_mask
 
-            if relevant_semicolons != 0:
-                # Parse city
-                var semicolon_idx = count_trailing_zeros(relevant_semicolons)
-                var city_len = Int(semicolon_idx) - start_of_line_idx
-                var hash_city = fast_hash(
-                    data_ptr + pos + start_of_line_idx, city_len
+            # Parse city
+            var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
+            var city_len = Int(semicolon_idx) - start_of_line_idx
+            var hash_city = fast_hash(
+                data_ptr + pos + start_of_line_idx, city_len
+            )
+
+            # parse value
+            # interlived version of
+            alias vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
+            alias vec_2d = SIMD[DType.int16, 4](10, 0, 1, 0)  # d.dX
+            alias vec_digits = vec_3d.interleave(vec_2d)
+
+            var val_start_idx = pos + semicolon_idx + 1
+            var num_len = newline_idx - (semicolon_idx + 1)
+
+            var is_neg = data[val_start_idx] == NEG
+            var sign = 1 - (Int(is_neg) << 1)
+
+            var val_abs_start = val_start_idx + Int(is_neg)
+            var digits_4 = SIMD[DType.int16, 4](
+                data_ptr.load[width=4](val_abs_start) - ZERO
+            )
+
+            # reduce_add[2] give the sum of the *interleaved* elements
+            var digits_8 = digits_4.interleave(digits_4)
+            var vals = (digits_8 * vec_digits).reduce_add[2]()
+
+            var is_short = (num_len - Int(is_neg)) == 3  # d.d
+            # a little bit slower with the following simd
+            # var mask = SIMD[DType.int16, 2](Int(not is_short), Int(is_short))
+            # var val_abs = (vals * mask).reduce_add()
+            var val_abs = vals[0] * Int(not is_short) + vals[1] * Int(
+                is_short
+            )
+            var val = sign * val_abs
+
+            if hash_city in d:
+                d[hash_city].update(Int(val))
+            else:
+                d[hash_city] = Measurement(Int(val))
+                city_names[hash_city] = String(
+                    bytes=data[
+                        pos + start_of_line_idx : pos + Int(semicolon_idx)
+                    ]
                 )
-
-                # parse value
-                # interlived version of
-                alias vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
-                alias vec_2d = SIMD[DType.int16, 4](10, 0, 1, 0)  # d.dX
-                alias vec_digits = vec_3d.interleave(vec_2d)
-
-                var val_start_idx = pos + semicolon_idx + 1
-                var num_len = newline_idx - (semicolon_idx + 1)
-
-                var is_neg = data[val_start_idx] == NEG
-                var sign = 1 - (Int(is_neg) << 1)
-
-                var val_abs_start = val_start_idx + Int(is_neg)
-                var digits_4 = SIMD[DType.int16, 4](
-                    data_ptr.load[width=4](val_abs_start) - ZERO
-                )
-
-                # reduce_add[2] give the sum of the *interleaved* elements
-                var digits_8 = digits_4.interleave(digits_4)
-                var vals = (digits_8 * vec_digits).reduce_add[2]()
-
-                var is_short = (num_len - Int(is_neg)) == 3  # d.d
-                # a little bit slower with the following simd
-                # var mask = SIMD[DType.int16, 2](Int(not is_short), Int(is_short))
-                # var val_abs = (vals * mask).reduce_add()
-                var val_abs = vals[0] * Int(not is_short) + vals[1] * Int(
-                    is_short
-                )
-                var val = sign * val_abs
-
-                if hash_city in d:
-                    d[hash_city].update(Int(val))
-                else:
-                    d[hash_city] = Measurement(Int(val))
-                    city_names[hash_city] = String(
-                        bytes=data[
-                            pos + start_of_line_idx : pos + Int(semicolon_idx)
-                        ]
-                    )
 
             start_of_line_idx = Int(newline_idx) + 1
             newlines &= ~(1 << newline_idx)

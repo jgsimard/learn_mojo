@@ -73,49 +73,47 @@ fn v4(file_path: String) raises -> String:
             var newline_idx = count_trailing_zeros(newlines)
 
             var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
-            var relevant_semicolons = semicolons & search_mask
 
-            if relevant_semicolons != 0:
-                # Parse city
-                var semicolon_idx = count_trailing_zeros(relevant_semicolons)
-                var city_len = Int(semicolon_idx) - start_of_line_idx
-                var hash_city = fast_hash(
-                    data_ptr + start + start_of_line_idx, city_len
+            # Parse city
+            var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
+            var city_len = Int(semicolon_idx) - start_of_line_idx
+            var hash_city = fast_hash(
+                data_ptr + start + start_of_line_idx, city_len
+            )
+
+            # parse value
+            alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1)  # dd.d
+            alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0)  # d.d
+
+            var val_start_idx = start + semicolon_idx + 1
+            var num_len = newline_idx - (semicolon_idx + 1)
+
+            var is_neg = data[val_start_idx] == NEG
+            var sign = 1 - (Int(is_neg) << 1)
+
+            var val_abs_start = val_start_idx + Int(is_neg)
+            var digits = SIMD[DType.int32, 4](
+                data_ptr.load[width=4](val_abs_start) - ZERO
+            )
+            var val_long = (digits * vec_3d).reduce_add()
+            var val_short = (digits * vec_2d).reduce_add()
+
+            var is_short = (num_len - Int(is_neg)) == 3  # d.d
+            var val = sign * (
+                val_short * Int(is_short) + val_long * Int(not is_short)
+            )
+
+            if hash_city in d:
+                d[hash_city].update(Int(val))
+            else:
+                d[hash_city] = Measurement(Int(val))
+                city_names[hash_city] = String(
+                    bytes=data[
+                        start
+                        + start_of_line_idx : start
+                        + Int(semicolon_idx)
+                    ]
                 )
-
-                # parse value
-                alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1)  # dd.d
-                alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0)  # d.d
-
-                var val_start_idx = start + semicolon_idx + 1
-                var num_len = newline_idx - (semicolon_idx + 1)
-
-                var is_neg = data[val_start_idx] == NEG
-                var sign = 1 - (Int(is_neg) << 1)
-
-                var val_abs_start = val_start_idx + Int(is_neg)
-                var digits = SIMD[DType.int32, 4](
-                    data_ptr.load[width=4](val_abs_start) - ZERO
-                )
-                var val_long = (digits * vec_3d).reduce_add()
-                var val_short = (digits * vec_2d).reduce_add()
-
-                var is_short = (num_len - Int(is_neg)) == 3  # d.d
-                var val = sign * (
-                    val_short * Int(is_short) + val_long * Int(not is_short)
-                )
-
-                if hash_city in d:
-                    d[hash_city].update(Int(val))
-                else:
-                    d[hash_city] = Measurement(Int(val))
-                    city_names[hash_city] = String(
-                        bytes=data[
-                            start
-                            + start_of_line_idx : start
-                            + Int(semicolon_idx)
-                        ]
-                    )
 
             start_of_line_idx = Int(newline_idx) + 1
             newlines &= ~(1 << newline_idx)
