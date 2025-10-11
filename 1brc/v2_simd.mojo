@@ -33,11 +33,12 @@ struct Measurement(Copyable, Movable, Writable):
 
 # alias simd_width = simd_width_of[DType.uint8]()
 alias simd_width = 64
+alias bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
 
 fn parse_station[
     simd_width: Int
-](data: Span[UInt8], mut start: Int, end: Int) raises -> List[(String, Int)]:
+](data: Span[UInt8], mut pos: Int, end: Int) raises -> List[(String, Int)]:
     alias middle = ord(";")
     alias new_line = ord("\n")
     alias NEG = ord("-")
@@ -48,8 +49,8 @@ fn parse_station[
     var stations = List[(String, Int)]()
 
     # tail = scalar
-    if start + simd_width > end:
-        var tail = String(bytes=data[start : end - 1])
+    if pos + simd_width > end:
+        var tail = String(bytes=data[pos : end - 1])
         for l in tail.split("\n"):
             if len(l) == 0:
                 continue
@@ -57,12 +58,12 @@ fn parse_station[
             var city = String(station[0])
             var val = atol(station[1].replace(".", ""))
             stations.append((city, val))
-        start = end
+        pos = end
         return stations^
 
-    var chunk = data_ptr.load[width=simd_width](start)
-    var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
-    var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
+    var chunk = data_ptr.load[width=simd_width](pos)
+    var newlines = pack_bits[bits_type](chunk.eq(new_line))
+    var semicolons = pack_bits[bits_type](chunk.eq(middle))
 
     var start_of_line_idx = 0
 
@@ -74,16 +75,14 @@ fn parse_station[
         # Parse city
         var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
         var city = String(
-            bytes=data[
-                start + start_of_line_idx : start + Int(semicolon_idx)
-            ]
+            bytes=data[pos + start_of_line_idx : pos + Int(semicolon_idx)]
         )
 
         # parse value
         alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1)  # dd.d
         alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0)  # d.d
 
-        var val_start_idx = start + semicolon_idx + 1
+        var val_start_idx = pos + semicolon_idx + 1
         var num_len = newline_idx - (semicolon_idx + 1)
 
         var is_neg = data[val_start_idx] == NEG
@@ -106,7 +105,7 @@ fn parse_station[
         start_of_line_idx = Int(newline_idx) + 1
         newlines &= ~(1 << newline_idx)
 
-    start += start_of_line_idx
+    pos += start_of_line_idx
 
     return stations^
 

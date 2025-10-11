@@ -33,8 +33,8 @@ struct Measurement(Copyable, Movable, Writable):
         writer.write(self.__str__())
 
 
-# alias simd_width = simd_width_of[DType.uint8]()
-alias simd_width = 64
+alias simd_width = simd_width_of[DType.uint8]()
+alias bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
 
 fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
@@ -51,7 +51,7 @@ fn v4(file_path: String) raises -> String:
     var file = open(file_path, "r")
     var data = Span[mut=False](file.read_bytes())
 
-    var start: Int = 0
+    var pos: Int = 0
     var end = len(data) - 1
 
     alias middle = ord(";")
@@ -61,31 +61,34 @@ fn v4(file_path: String) raises -> String:
     alias DOT = ord(".")
 
     var data_ptr = data.unsafe_ptr()
+    var line_start = pos
 
-    while start + simd_width < end:
-        var chunk = data_ptr.load[width=simd_width](start)
-        var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
-        var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
+    while pos + simd_width < end:
+        var chunk = data_ptr.load[width=simd_width](pos)
+        var newlines = pack_bits[bits_type](chunk.eq(new_line))
+        var semicolons = pack_bits[bits_type](chunk.eq(middle))
+
+        if newlines == 0:
+            # to no break temperature in two chunks
+            pos += Int(count_leading_zeros(semicolons))
+            continue
 
         var start_of_line_idx = 0
 
         while newlines != 0:
             var newline_idx = count_trailing_zeros(newlines)
-
             var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
 
             # Parse city
             var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
-            var city_len = Int(semicolon_idx) - start_of_line_idx
-            var hash_city = fast_hash(
-                data_ptr + start + start_of_line_idx, city_len
-            )
+            var city_len = pos + Int(semicolon_idx) - line_start
+            var hash_city = fast_hash(data_ptr + line_start, city_len)
 
             # parse value
             alias vec_3d = SIMD[DType.int32, 4](100, 10, 0, 1)  # dd.d
             alias vec_2d = SIMD[DType.int32, 4](10, 0, 1, 0)  # d.d
 
-            var val_start_idx = start + semicolon_idx + 1
+            var val_start_idx = pos + semicolon_idx + 1
             var num_len = newline_idx - (semicolon_idx + 1)
 
             var is_neg = data[val_start_idx] == NEG
@@ -108,21 +111,18 @@ fn v4(file_path: String) raises -> String:
             else:
                 d[hash_city] = Measurement(Int(val))
                 city_names[hash_city] = String(
-                    bytes=data[
-                        start
-                        + start_of_line_idx : start
-                        + Int(semicolon_idx)
-                    ]
+                    bytes=data[line_start : pos + Int(semicolon_idx)]
                 )
 
             start_of_line_idx = Int(newline_idx) + 1
+            line_start = pos + start_of_line_idx
             newlines &= ~(1 << newline_idx)
 
-        start += start_of_line_idx
+        pos += start_of_line_idx
 
     # tail = scalar
-    if start < end:
-        var tail = String(bytes=data[start : end - 1])
+    if pos < end:
+        var tail = String(bytes=data[pos : end - 1])
         for l in tail.split("\n"):
             if len(l) == 0:
                 continue

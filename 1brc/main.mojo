@@ -42,8 +42,6 @@ fn main() raises:
     var nb_lines = 1_000_000
     print("Nb lines = ", nb_lines)
     print("Nb cores = ", num_physical_cores())
-    # var line_start = pos  # Track where current line started
-    # alias bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
     process_and_save[v0, "v0"]()
     process_and_save[v1, "v1"]()
@@ -55,12 +53,12 @@ fn main() raises:
     process_and_save[v7, "v7"]()
     # process_and_save[v8, "v8"]()
 
-    # var t0 = 156.6
-    # bench_compare[v0, "v0"](t0)
-    # bench_compare[v1, "v1"](t0)
-    # bench_compare[v2, "v2"](t0)
-    # bench_compare[v3, "v3"](t0)
-    # bench_compare[v4, "v4"](t0)
-    # bench_compare[v5, "v5"](t0)
-    # bench_compare[v6, "v6"](t0)
-    # bench_compare[v7, "v7"](t0)
+    var t0 = 156.6
+    bench_compare[v0, "v0"](t0)
+    bench_compare[v1, "v1"](t0)
+    bench_compare[v2, "v2"](t0)
+    bench_compare[v3, "v3"](t0)
+    bench_compare[v4, "v4"](t0)
+    bench_compare[v5, "v5"](t0)
+    bench_compare[v6, "v6"](t0)
+    bench_compare[v7, "v7"](t0)
