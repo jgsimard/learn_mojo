@@ -1,7 +1,7 @@
 from benchmark import run, Unit
 import time
 from sys import num_physical_cores
-from compile.reflection import get_linkage_name
+from benchmark import keep
 
 
 from v0_basics import v0
@@ -17,37 +17,6 @@ from v7_mmap import v7
 alias file_path = "./measurements.txt"
 
 
-fn bench_v0() raises:
-    var d = v0(file_path)
-
-
-fn bench_v1() raises:
-    var d = v1(file_path)
-
-
-fn bench_v2() raises:
-    var d = v2(file_path)
-
-
-fn bench_v3() raises:
-    var d = v3(file_path)
-
-
-fn bench_v4() raises:
-    var d = v4(file_path)
-
-
-fn bench_v5() raises:
-    var d = v5(file_path)
-
-
-fn bench_v6() raises:
-    var d = v6(file_path)
-
-
-fn bench_v7() raises:
-    var d = v7(file_path)
-
 fn process_and_save[func: fn(String) raises -> String, name: String]() raises:
     var output = func(file_path)
     var output_hash = hash(output)
@@ -58,48 +27,33 @@ fn process_and_save[func: fn(String) raises -> String, name: String]() raises:
     with open(filename, "w") as f:
         f.write(output)
 
+fn bench[v: fn(String) raises -> String]() raises:
+    var d = v(file_path)
+
+fn bench_compare[v: fn(String) raises -> String, name: String](t0: Float64) raises:
+    var t = run[bench[v]](max_iters=10).mean(Unit.ms)
+    print(name, " = ", round(t, 1), ", X", round(t0 / t, 1))
 
 fn main() raises:
     var nb_lines = 1_000_000
     print("Nb lines = ", nb_lines)
     print("Nb cores = ", num_physical_cores())
 
-    process_and_save[v0, "v0"]()
-    process_and_save[v1, "v1"]()
-    process_and_save[v2, "v2"]()
-    process_and_save[v3, "v3"]()
-    process_and_save[v4, "v4"]()
-    process_and_save[v5, "v5"]()
+    # process_and_save[v0, "v0"]()
+    # process_and_save[v1, "v1"]()
+    # process_and_save[v2, "v2"]()
+    # process_and_save[v3, "v3"]()
+    # process_and_save[v4, "v4"]()
+    # process_and_save[v5, "v5"]()
     process_and_save[v6, "v6"]()
     process_and_save[v7, "v7"]()
-    
-    # # print(v0(file_path))
-    # print("hash v0 : ", hash(v0(file_path)))
-    # # print(v1(file_path))
-    # print("hash v1 : ", hash(v1(file_path)))
-    # print("hash v2 : ", hash(v2(file_path)))
-    # print("hash v3 : ", hash(v3(file_path)))
-    # print("hash v4 : ", hash(v4(file_path)))
-    # print("hash v5 : ", hash(v5(file_path)))
-    # print("hash v6 : ", hash(v6(file_path)))
-    # # print(v7(file_path))
-    # print("hash v7 : ", hash(v7(file_path)))
 
-
-    # var t0 = 628.5
-    # var t0 = run[bench_v0](max_iters=10).mean(Unit.ms)
-    # print("v0 = ", round(t0, 1), ", X", round(t0 / t0, 1))
-    # var t1 = run[bench_v1](max_iters=10).mean(Unit.ms)
-    # print("v1 = ", round(t1, 1), ", X", round(t0 / t1, 1))
-    # var t2 = run[bench_v2](max_iters=10).mean(Unit.ms)
-    # print("v2 = ", round(t2, 1), ", X", round(t0 / t2, 1))
-    # var t3 = run[bench_v3](max_iters=10).mean(Unit.ms)
-    # print("v3 = ", round(t3, 1), ", X", round(t0 / t3, 1))
-    # var t4 = run[bench_v4](max_iters=10).mean(Unit.ms)
-    # print("v4 = ", round(t4, 1), ", X", round(t0 / t4, 1))
-    # var t5 = run[bench_v5](max_iters=10).mean(Unit.ms)
-    # print("v5 = ", round(t5, 1), ", X", round(t0 / t5, 1))
-    # var t6 = run[bench_v6](max_iters=10).mean(Unit.ms)
-    # print("v6 = ", round(t6, 1), ", X", round(t0 / t6, 1))
-    # var t7 = run[bench_v7](max_iters=10).mean(Unit.ms)
-    # print("v7 = ", round(t7, 1), ", X", round(t0 / t7, 1))
+    var t0 = 628.5
+    bench_compare[v0, "v0"](t0)
+    bench_compare[v1, "v1"](t0)
+    bench_compare[v2, "v2"](t0)
+    bench_compare[v3, "v3"](t0)
+    bench_compare[v4, "v4"](t0)
+    bench_compare[v5, "v5"](t0)
+    bench_compare[v6, "v6"](t0)
+    bench_compare[v7, "v7"](t0)
