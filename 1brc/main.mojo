@@ -51,7 +51,7 @@ fn main() raises:
     process_and_save[v5, "v5"]()
     process_and_save[v6, "v6"]()
     process_and_save[v7, "v7"]()
-    # process_and_save[v8, "v8"]()
+    process_and_save[v8, "v8"]()
 
     var t0 = 156.6
     bench_compare[v0, "v0"](t0)
