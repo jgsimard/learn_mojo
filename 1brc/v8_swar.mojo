@@ -41,8 +41,8 @@ struct Measurement(Copyable, Movable, Writable):
         writer.write(self.__str__())
 
 
-# alias simd_width = simd_width_of[DType.uint8]()
-alias simd_width = 64
+alias simd_width = simd_width_of[DType.uint8]()
+alias bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
 
 fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
@@ -68,72 +68,74 @@ fn process_chunk(
 
     var data_ptr = data.unsafe_ptr()
     var pos = start
+    var line_start = pos
 
     while pos + simd_width <= end:
         var chunk = data_ptr.load[width=simd_width](pos)
-        var newlines = pack_bits[DType.uint64](chunk.eq(new_line))
-        var semicolons = pack_bits[DType.uint64](chunk.eq(middle))
+        var newlines = pack_bits[bits_type](chunk.eq(new_line))
+        var semicolons = pack_bits[bits_type](chunk.eq(middle))
+
+        if newlines == 0:
+            # to no break temperature in two chunks
+            pos += Int(count_leading_zeros(semicolons))
+            continue
 
         var start_of_line_idx = 0
 
         while newlines != 0:
             var newline_idx = count_trailing_zeros(newlines)
-
             var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
-            var relevant_semicolons = semicolons & search_mask
 
-            if relevant_semicolons != 0:
-                # Parse city
-                var semicolon_idx = count_trailing_zeros(relevant_semicolons)
-                var city_len = Int(semicolon_idx) - start_of_line_idx
-                var hash_city = fast_hash(
-                    data_ptr + pos + start_of_line_idx, city_len
+            # Parse city
+            var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
+            var city_len = pos + Int(semicolon_idx) - line_start
+            var hash_city = fast_hash(data_ptr + line_start, city_len)
+
+            # parse value
+            # 1BRC merykitty’s Magic SWAR
+            # https://questdb.com/blog/1brc-merykittys-magic-swar/
+            alias MAGIC_MULTIPLIER: Int64 = (
+                100 * 0x1000000 + 10 * 0x10000 + 1
+            )
+            alias DOT_DETECTOR: Int64 = 0x10101000
+            alias ASCII_TO_DIGIT_MASK: Int64 = 0x0F000F0F00
+
+            var val_start_idx = pos + semicolon_idx + 1
+
+            var u8x8 = data_ptr.load[width=8](val_start_idx)
+            var inputData = bitcast[DType.int64, 1](u8x8)
+
+            # long negatedInput = ~inputData;
+            var negatedInput = ~inputData
+            # long broadcastSign = (negatedInput << 59) >> 63;
+            var broadcastSign = (negatedInput << 59) >> 63
+            # long maskToRemoveSign = ~(broadcastSign & 0xFF);
+            var maskToRemoveSign = ~(broadcastSign & 0xFF)
+            # long withSignRemoved = inputData & maskToRemoveSign;
+            var withSignRemoved = inputData & maskToRemoveSign
+            # int dotPos = Long.numberOfTrailingZeros(negatedInput & DOT_DETECTOR);
+            var dotPos = count_trailing_zeros(negatedInput & DOT_DETECTOR)
+            # long alignedToTemplate = withSignRemoved << (28 - dotPos);
+            var alignedToTemplate = withSignRemoved << (28 - dotPos)
+            # long digits = alignedToTemplate & ASCII_TO_DIGIT_MASK;
+            var digits = alignedToTemplate & ASCII_TO_DIGIT_MASK
+            # long absValue = ((digits * MAGIC_MULTIPLIER) >>> 32) & 0x3FF;
+            var absValue = ((digits * MAGIC_MULTIPLIER) >> 32) & 0x3FF
+            # long temperature = (absValue ^ broadcastSign) - broadcastSign;
+            var temperature = (absValue ^ broadcastSign) - broadcastSign
+
+            var val = temperature
+
+            if hash_city in d:
+                d[hash_city].update(Int(val))
+            else:
+                d[hash_city] = Measurement(Int(val))
+                city_names[hash_city] = String(
+                    bytes=data[line_start : pos + Int(semicolon_idx)]
                 )
-
-                # parse value
-                alias MAGIC_MULTIPLIER: Int64 = (
-                    100 * 0x1000000 + 10 * 0x10000 + 1
-                )
-                alias DOT_DETECTOR: Int64 = 0x10101000
-                alias ASCII_TO_DIGIT_MASK: Int64 = 0x0F000F0F00
-
-                var val_start_idx = pos + semicolon_idx + 1
-
-                var u8x8 = data_ptr.load[width=8](val_start_idx)
-                var inputData = bitcast[DType.int64, 1](u8x8)
-
-                # long negatedInput = ~inputData;
-                var negatedInput = ~inputData
-                # long broadcastSign = (negatedInput << 59) >> 63;
-                var broadcastSign = (negatedInput << 59) >> 63
-                # long maskToRemoveSign = ~(broadcastSign & 0xFF);
-                var maskToRemoveSign = ~(broadcastSign & 0xFF)
-                # long withSignRemoved = inputData & maskToRemoveSign;
-                var withSignRemoved = inputData & maskToRemoveSign
-                # int dotPos = Long.numberOfTrailingZeros(negatedInput & DOT_DETECTOR);
-                var dotPos = count_trailing_zeros(negatedInput & DOT_DETECTOR)
-                # long alignedToTemplate = withSignRemoved << (28 - dotPos);
-                var alignedToTemplate = withSignRemoved << (28 - dotPos)
-                # long digits = alignedToTemplate & ASCII_TO_DIGIT_MASK;
-                var digits = alignedToTemplate & ASCII_TO_DIGIT_MASK
-                # long absValue = ((digits * MAGIC_MULTIPLIER) >>> 32) & 0x3FF;
-                var absValue = ((digits * MAGIC_MULTIPLIER) >> 32) & 0x3FF
-                # long temperature = (absValue ^ broadcastSign) - broadcastSign;
-                var temperature = (absValue ^ broadcastSign) - broadcastSign
-
-                var val = temperature
-
-                if hash_city in d:
-                    d[hash_city].update(Int(val))
-                else:
-                    d[hash_city] = Measurement(Int(val))
-                    city_names[hash_city] = String(
-                        bytes=data[
-                            pos + start_of_line_idx : pos + Int(semicolon_idx)
-                        ]
-                    )
 
             start_of_line_idx = Int(newline_idx) + 1
+            line_start = pos + start_of_line_idx
             newlines &= ~(1 << newline_idx)
 
         pos += start_of_line_idx
