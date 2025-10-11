@@ -54,14 +54,7 @@ fn format_output(d: Dict[String, Measurement]) raises -> String:
     for entry in d.items():
         cities.append(entry.key)
     
-    # Simple bubble sort
-    var n = len(cities)
-    for i in range(n):
-        for j in range(0, n - i - 1):
-            if cities[j] > cities[j + 1]:
-                var temp = cities[j]
-                cities[j] = cities[j + 1]
-                cities[j + 1] = temp
+    sort(cities)
     
     # Build output string
     var result = String("{")

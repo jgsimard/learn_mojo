@@ -169,14 +169,7 @@ fn format_output[M: Stringable & Copyable & Movable](
     for entry in city_names.items():
         cities.append(entry.value)
     
-    # Simple bubble sort (you could use a more efficient sort if needed)
-    var n = len(cities)
-    for i in range(n):
-        for j in range(0, n - i - 1):
-            if cities[j] > cities[j + 1]:
-                var temp = cities[j]
-                cities[j] = cities[j + 1]
-                cities[j + 1] = temp
+    sort(cities)
     
     # Build output string
     var result = String("{")
