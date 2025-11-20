@@ -330,8 +330,8 @@ fn process_parallel[
     parallelize[process_worker](num_workers)
 
     # Merge results from all threads
-    var final_dict = thread_dicts[0].copy()
-    var final_city_names = thread_city_names[0].copy()
+    ref final_dict = thread_dicts[0]
+    ref final_city_names = thread_city_names[0]
 
     for worker_id in range(1, num_workers):  # skip first one
         for entry in thread_dicts[worker_id].items():
