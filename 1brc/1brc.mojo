@@ -360,11 +360,11 @@ fn process_parallel[
 # =============================================================================
 # Memory Mapped File
 # =============================================================================
-struct MMap[origin: Origin]:
+struct MMap:
     """Simple memory-mapped file for reading."""
 
-    var data: UnsafePointer[UInt8, origin]
-    var size: Int
+    var _data: UnsafePointer[UInt8, MutOrigin.external]
+    var _size: Int
 
     fn __init__(out self, path: String) raises:
         """Memory map a file for reading.
@@ -384,14 +384,18 @@ struct MMap[origin: Origin]:
             _ = external_call["close", Int](fd)
             raise Error("Failed to get file size")
 
-        self.size = stat_buf[6]  # st_size
+        self._size = stat_buf[6]  # st_size
         stat_buf.free()
 
         # Memory map the file
         # mmap returns a pointer - we specify the return type and Mojo handles the conversion
-        self.data = external_call["mmap", UnsafePointer[UInt8, origin]](
-            UnsafePointer[UInt8, origin](),  # addr (let kernel choose)
-            self.size,  # length
+        self._data = external_call[
+            "mmap", UnsafePointer[UInt8, MutOrigin.external]
+        ](
+            UnsafePointer[
+                UInt8, MutOrigin.external
+            ](),  # addr (let kernel choose)
+            self._size,  # length
             1,  # PROT_READ
             1,  # MAP_SHARED
             fd,  # fd
@@ -402,21 +406,30 @@ struct MMap[origin: Origin]:
         _ = external_call["close", Int](fd)
 
         # Check if mmap failed (returns MAP_FAILED which is -1 cast to pointer)
-        if Int(self.data) == -1:
+        if Int(self._data) == -1:
             raise Error("mmap failed")
 
     fn __del__(deinit self):
         """Unmap the memory."""
-        if self.data:
-            _ = external_call["munmap", Int](self.data, self.size)
+        if self._data:
+            _ = external_call["munmap", Int](self._data, self._size)
 
     fn __getitem__(self, idx: Int) -> UInt8:
         """Get byte at index."""
-        return self.data[idx]
+        return self._data[idx]
 
     fn read[width: Int](self, start: Int) -> SIMD[DType.uint8, width]:
         """Read a SIMD vector of bytes at the given offset."""
-        return self.data.load[width=width](start)
+        return self._data.load[width=width](start)
+
+    fn as_span[
+        mut: Bool,
+        origin: Origin[mut], //,
+    ](ref [origin]self) -> Span[UInt8, origin]:
+        return Span(
+            ptr=self._data.mut_cast[mut]().unsafe_origin_cast[origin](),
+            length=self._size,
+        )
 
 
 # =============================================================================
@@ -447,8 +460,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
                 var station = l.split(";")
                 var city = String(station[0])
                 var val = atof(station[1])
-                var bob = d.get(city)
-                if bob:
+                if d.get(city):
                     d[city].update(val)
                 else:
                     d[city] = MeasurementFloat(val, val, val, 1.0)
@@ -518,13 +530,13 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         return process_parallel(data)
 
     elif version == 5:
-        var mmap_file = MMap[MutAnyOrigin](file_path)
-        var data = Span[mut=False](ptr=mmap_file.data, length=mmap_file.size)
+        var mmap_file = MMap(file_path)
+        var data = mmap_file.as_span()
         return process_parallel(data)
 
     elif version == 6:
-        var mmap_file = MMap[MutAnyOrigin](file_path)
-        var data = Span[mut=False](ptr=mmap_file.data, length=mmap_file.size)
+        var mmap_file = MMap(file_path)
+        var data = mmap_file.as_span()
         return process_parallel[True](data)
 
     else:
