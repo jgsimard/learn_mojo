@@ -71,4 +71,4 @@ if __name__ == "__main__":
         start_time = time.time()
         solve_1brc_polars_optimized(file_to_process)
         end_time = time.time()
-        print(f"\nExecution time: {end_time - start_time:.2f} seconds")
+        print(f"\nExecution time: {(end_time - start_time)*1000.0:.1f} ms")
