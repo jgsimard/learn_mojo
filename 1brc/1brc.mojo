@@ -287,16 +287,16 @@ fn process_parallel[
     try_update: Bool = False
 ](data: Span[UInt8]) raises -> String:
     var num_workers = num_physical_cores()
-    var chunk_size = len(data) // num_workers
 
     # Calculate aligned chunk boundaries
+    var approx_chunk_size = len(data) // num_workers
     var chunk_starts = List[Int]()
     var chunk_ends = List[Int]()
 
     chunk_starts.append(0)
 
     for i in range(1, num_workers):
-        var approx_start = i * chunk_size
+        var approx_start = i * approx_chunk_size
         var aligned_start = find_next_newline(data, approx_start)
         chunk_starts.append(aligned_start)
         chunk_ends.append(aligned_start)
@@ -304,16 +304,12 @@ fn process_parallel[
     chunk_ends.append(len(data))
 
     # Create per-thread storage
-    var thread_dicts = List[Dict[UInt64, MeasurementInt]](capacity=num_workers)
-    var thread_city_names = List[Dict[UInt64, String]](capacity=num_workers)
-
-    for _ in range(num_workers):
-        thread_dicts.append(
-            Dict[UInt64, MeasurementInt](power_of_two_initial_capacity=1024)
-        )
-        thread_city_names.append(
-            Dict[UInt64, String](power_of_two_initial_capacity=1024)
-        )
+    var thread_dicts = List[Dict[UInt64, MeasurementInt]](
+        length=num_workers, fill={}
+    )
+    var thread_city_names = List[Dict[UInt64, String]](
+        length=num_workers, fill={}
+    )
 
     # Process chunks in parallel
     @parameter
@@ -334,21 +330,17 @@ fn process_parallel[
     parallelize[process_worker](num_workers)
 
     # Merge results from all threads
-    var final_dict = Dict[UInt64, MeasurementInt](
-        power_of_two_initial_capacity=1024
-    )
-    var final_city_names = Dict[UInt64, String](
-        power_of_two_initial_capacity=1024
-    )
+    var final_dict = thread_dicts[0].copy()
+    var final_city_names = thread_city_names[0].copy()
 
-    for worker_id in range(num_workers):
+    for worker_id in range(1, num_workers):  # skip first one
         for entry in thread_dicts[worker_id].items():
             var hash_key = entry.key
             var measurement = entry.value
 
-            if hash_key in final_dict:
+            try:
                 final_dict[hash_key].merge(measurement)
-            else:
+            except:
                 final_dict[hash_key] = measurement
                 final_city_names[hash_key] = thread_city_names[worker_id][
                     hash_key
