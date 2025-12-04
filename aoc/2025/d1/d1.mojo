@@ -1,4 +1,5 @@
 from testing import assert_equal
+from benchmark import run, Unit
 
 comptime test_file_path = "./test_input.txt"
 comptime file_path = "./input.txt"
@@ -67,3 +68,23 @@ fn main() raises:
 
     assert_equal(part_2(test_file_path), 6)
     print("part 2: ", part_2(file_path))
+
+    @parameter
+    fn bench[part: Int]() raises:
+        fn bench_fn() raises:
+            @parameter
+            if part == 1:
+                _ = part_1(file_path)
+            else:
+                _ = part_2(file_path)
+
+        var time_ms = run[bench_fn](max_iters=30).mean(Unit.ns)
+        print(
+            "part",
+            part,
+            round(time_ms / 1000.0, 1),
+            "us",
+        )
+
+    bench[1]()
+    bench[2]()

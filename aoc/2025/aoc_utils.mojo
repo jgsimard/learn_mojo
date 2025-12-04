@@ -1,19 +1,21 @@
 from algorithm import parallelize
 from os import Atomic
 
+
 fn sum_file[
-    process_fn: fn(StringSlice) raises -> Int,
+    process_fn: fn (StringSlice) raises -> Int,
     parallel: Bool,
-    sep: String = "\n"
-](file_path: String) raises -> Int:    
+    sep: String = "\n",
+](file_path: String) raises -> Int:
     var content: String
     with open(file_path, "r") as f:
         content = f.read()
     var lines = content.split(StringSlice(sep))
-    
+
     @parameter
     if parallel:
         var total = Atomic[DType.int](0)
+
         @parameter
         fn worker(idx: Int):
             try:
@@ -25,7 +27,7 @@ fn sum_file[
                 pass
 
         parallelize[worker](len(lines))
-        
+
         return Int(total.load())
 
     else:

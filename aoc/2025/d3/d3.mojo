@@ -6,7 +6,7 @@ from aoc_utils import sum_file
 comptime test_file_path = "./test_input.txt"
 comptime file_path = "./input.txt"
 
-    
+
 fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
     if len(numbers) == 0:
         raise Error("empty list")
@@ -26,7 +26,7 @@ fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
 
 
 fn day3[n: Int, parallel: Bool = False](file_path: String) raises -> Int:
-    fn process_line(line: StringSlice) raises-> Int:
+    fn process_line(line: StringSlice) raises -> Int:
         var bytes = line.as_bytes()
         var len = len(bytes)
 
@@ -40,9 +40,8 @@ fn day3[n: Int, parallel: Bool = False](file_path: String) raises -> Int:
             line_value = line_value * 10 + v
             pos_min_next += p + 1
         return line_value
-        
+
     return sum_file[process_line, parallel](file_path)
-        
 
 
 fn main() raises:
