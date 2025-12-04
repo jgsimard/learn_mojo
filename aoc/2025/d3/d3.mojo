@@ -1,12 +1,12 @@
 from testing import assert_equal
 from benchmark import run, Unit
-from algorithm import parallelize
-from os import Atomic
+
+from aoc_utils import sum_file
 
 comptime test_file_path = "./test_input.txt"
 comptime file_path = "./input.txt"
 
-
+    
 fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
     if len(numbers) == 0:
         raise Error("empty list")
@@ -26,12 +26,6 @@ fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
 
 
 fn day3[n: Int, parallel: Bool = False](file_path: String) raises -> Int:
-    var content: String
-    with open(file_path, "r") as f:
-        content = f.read()
-    
-    var lines = content.split("\n")
-
     fn process_line(line: StringSlice) raises-> Int:
         var bytes = line.as_bytes()
         var len = len(bytes)
@@ -47,24 +41,7 @@ fn day3[n: Int, parallel: Bool = False](file_path: String) raises -> Int:
             pos_min_next += p + 1
         return line_value
         
-    @parameter
-    if parallel:
-        var total = Atomic[DType.int](0)        
-        @parameter
-        fn worker(idx: Int):
-            try:            
-                _ = total.fetch_add(process_line(lines[idx]))
-            except:
-                pass
-        parallelize[worker](len(lines))
-        return Int(total.load())
-
-    else:
-        total = 0
-        for line in lines:
-            total += process_line(line)
-
-        return total
+    return sum_file[process_line, parallel](file_path)
         
 
 
