@@ -1,5 +1,7 @@
 from testing import assert_equal
 from benchmark import run, Unit
+from algorithm import parallelize
+from os import Atomic
 
 comptime test_file_path = "./test_input.txt"
 comptime file_path = "./input.txt"
@@ -23,25 +25,47 @@ fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
     return (Int(max_val - 48), max_idx)
 
 
-fn day3[n: Int](file_path: String) raises -> Int:
-    total = 0
+fn day3[n: Int, parallel: Bool = False](file_path: String) raises -> Int:
+    var content: String
     with open(file_path, "r") as f:
-        for line in f.read().split("\n"):
-            var bytes = line.as_bytes()
-            var len = len(bytes)
+        content = f.read()
+    
+    var lines = content.split("\n")
 
-            if len == 0:
-                continue
+    fn process_line(line: StringSlice) raises-> Int:
+        var bytes = line.as_bytes()
+        var len = len(bytes)
 
-            line_value = 0
-            var pos_min_next = 0
-            for i in range(n, 0, -1):
-                v, p = max_argmax(bytes[pos_min_next : len - i + 1])
-                line_value = line_value * 10 + v
-                pos_min_next += p + 1
-            total += line_value
+        if len == 0:
+            return 0
 
-    return total
+        line_value = 0
+        var pos_min_next = 0
+        for i in range(n, 0, -1):
+            v, p = max_argmax(bytes[pos_min_next : len - i + 1])
+            line_value = line_value * 10 + v
+            pos_min_next += p + 1
+        return line_value
+        
+    @parameter
+    if parallel:
+        var total = Atomic[DType.int](0)        
+        @parameter
+        fn worker(idx: Int):
+            try:            
+                _ = total.fetch_add(process_line(lines[idx]))
+            except:
+                pass
+        parallelize[worker](len(lines))
+        return Int(total.load())
+
+    else:
+        total = 0
+        for line in lines:
+            total += process_line(line)
+
+        return total
+        
 
 
 fn main() raises:
@@ -52,11 +76,11 @@ fn main() raises:
     print("part 2: ", day3[12](file_path))
 
     @parameter
-    fn bench[n: Int]() raises:
+    fn bench[n: Int, parallel: Bool = False]() raises:
         fn bench_fn() raises:
-            _ = day3[n](file_path)
+            _ = day3[n, parallel](file_path)
 
-        var time_ms = run[bench_fn](max_iters=100).mean(Unit.ns)
+        var time_ms = run[bench_fn](max_iters=1000).mean(Unit.ns)
         print(
             "n",
             n,
@@ -66,3 +90,6 @@ fn main() raises:
 
     bench[2]()
     bench[12]()
+
+    bench[2, True]()
+    bench[12, True]()
