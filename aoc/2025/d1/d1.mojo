@@ -79,12 +79,7 @@ fn main() raises:
                 _ = part_2(file_path)
 
         var time_ms = run[bench_fn](max_iters=30).mean(Unit.ns)
-        print(
-            "part",
-            part,
-            round(time_ms / 1000.0, 1),
-            "us",
-        )
+        print("part {}, t = {} us".format(part, round(time_ms / 1000.0, 1)))
 
     bench[1]()
     bench[2]()
