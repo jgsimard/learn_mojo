@@ -2,12 +2,9 @@ from testing import assert_equal
 from bit import count_leading_zeros, count_trailing_zeros
 from math import log10, floor
 from benchmark import run, Unit
+from itertools import product
 
-from aoc_utils import sum_file
-
-
-comptime test_file_path = "./test_input.txt"
-comptime file_path = "./input.txt"
+from aoc.aoc_utils import sum_file, input_paths
 
 
 fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
@@ -20,7 +17,6 @@ fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
         @parameter
         if version == 0:
             for id in range(id_min, id_max + 1):
-                # value_tested += 1
                 var id_str = String(id)
                 len_id = len(id_str)
                 mid = len_id // 2
@@ -53,7 +49,6 @@ fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
             var end = min(id_max, (10**k - 1) * multiplier) + 1
 
             for candidate in range(start, end, multiplier):
-                # value_tested += 1
                 value += candidate
 
         else:
@@ -74,8 +69,7 @@ fn get_n_digits[version: String = "str"](v: Int) -> Int:
     elif version == "str":
         return len(String(v))
 
-    else:
-        # basic
+    else: # basic
         var temp = v
         var n_digits = 0
         while temp > 0:
@@ -118,15 +112,21 @@ fn part_2[parallel: Bool = False](file_path: String) raises -> Int:
 
 
 fn main() raises:
-    assert_equal(part_1[0](test_file_path), 1227775554)
-    assert_equal(part_1[1](test_file_path), 1227775554)
-    assert_equal(part_1[2](test_file_path), 1227775554)
-    assert_equal(part_1[0, True](test_file_path), 1227775554)
-    assert_equal(part_1[1, True](test_file_path), 1227775554)
-    assert_equal(part_1[2, True](test_file_path), 1227775554)
-    print("part 1 v0: ", part_1[0](file_path))
-    print("part 1 v1: ", part_1[1](file_path))
-    print("part 1 v2: ", part_1[2](file_path))
+    comptime test_file_path, file_path = input_paths[2]()
+
+    print("\nAoC 2025 - Day 2")
+
+    comptime ver = [0,1,2]
+    comptime par = [False, True]
+
+    @parameter
+    for v, p in product(ver, par):
+        assert_equal(part_1[v, p](test_file_path), 1227775554)
+    
+    print("part 1:", part_1[2](file_path))
+
+    assert_equal(part_2(test_file_path), 4174379265)
+    print("part 2:", part_2(file_path))
 
     @parameter
     fn bench[part: Int, v: Int, parallel: Bool = False]() raises:
@@ -137,23 +137,20 @@ fn main() raises:
             else:
                 _ = part_2[parallel](file_path)
 
-        var time_ms = run[bench_fn](max_iters=30).mean(Unit.ns)
-        print(
-            "part {}, v{} : {} us".format(part, v, round(time_ms / 1000.0, 1))
-        )
+        var time_ns = run[bench_fn](max_iters=30).mean(Unit.ns)
+        var time_us = round(time_ns / 1000.0, 1)
+        print("part {}, v{} : {} us".format(part, v, time_us))
 
-    print("Sequential")
-    bench[1, 0]()
-    bench[1, 1]()
-    bench[1, 2]()
+    # print("Sequential")
+    # bench[1, 0]()
+    # bench[1, 1]()
+    # bench[1, 2]()
 
-    print("Parallel")
-    bench[1, 0, True]()
-    bench[1, 1, True]()
+    # print("Parallel")
+    # bench[1, 0, True]()
+    # bench[1, 1, True]()
     bench[1, 2, True]()
 
-    assert_equal(part_2(test_file_path), 4174379265)
-    print("part 2:", part_2(file_path))
 
-    bench[2, 0]()
+    # bench[2, 0]()
     bench[2, 0, True]()

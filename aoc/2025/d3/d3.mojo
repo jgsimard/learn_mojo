@@ -1,10 +1,7 @@
 from testing import assert_equal
 from benchmark import run, Unit
 
-from aoc_utils import sum_file
-
-comptime test_file_path = "./test_input.txt"
-comptime file_path = "./input.txt"
+from aoc.aoc_utils import sum_file, input_paths
 
 
 fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
@@ -45,6 +42,10 @@ fn day3[n: Int, parallel: Bool = False](file_path: String) raises -> Int:
 
 
 fn main() raises:
+    comptime test_file_path, file_path = input_paths[3]()
+
+    print("\nAoC 2025 - Day 3")
+
     assert_equal(day3[2](test_file_path), 357)
     print("part 1: ", day3[2](file_path))
 
@@ -56,11 +57,12 @@ fn main() raises:
         fn bench_fn() raises:
             _ = day3[n, parallel](file_path)
 
-        var time_ms = run[bench_fn](max_iters=1000).mean(Unit.ns)
-        print("n={}, t={} us".format(n, round(time_ms / 1000.0, 1)))
+        var time_ns = run[bench_fn](max_iters=30).mean(Unit.ns)
+        var time_us = round(time_ns / 1000.0, 1)
+        print("n={}, t={} us".format(n, time_us))
 
-    bench[2]()
-    bench[12]()
+    # bench[2]()
+    # bench[12]()
 
     bench[2, True]()
     bench[12, True]()
