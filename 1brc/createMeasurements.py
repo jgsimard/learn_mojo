@@ -428,7 +428,7 @@ class CreateMeasurement:
     stations = pl.DataFrame(STATIONS, ("names", "means"))
 
     def __init__(self):
-        self.rng = np.random.default_rng()
+        self.rng = np.random.default_rng(123)
 
     def generate_batch(
         self, std_dev: float = 10, records: int = 10_000_000

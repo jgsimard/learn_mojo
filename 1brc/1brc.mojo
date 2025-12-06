@@ -485,7 +485,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
 
 fn main() raises:
     comptime file_path = "./measurements.txt"
-    comptime hash_1M = 12990781359592090910
+    comptime hash_1M = 7830574609753597440
 
     print("1BRC Unified Implementation")
     print("Cores:", num_physical_cores())
