@@ -1,9 +1,6 @@
 from testing import assert_equal
 from benchmark import run, Unit
-
-comptime test_file_path = "./test_input.txt"
-comptime file_path = "./input.txt"
-
+from aoc.aoc_utils import input_paths
 
 fn part_1(file_path: String) raises -> Int:
     var pos = 50
@@ -63,6 +60,10 @@ fn part_2(file_path: String) raises -> Int:
 
 
 fn main() raises:
+    comptime test_file_path, file_path = input_paths[1]()
+
+    print("AoC 2025 - Day 1")
+
     assert_equal(part_1(test_file_path), 3)
     print("part 1: ", part_1(file_path))
 
@@ -78,8 +79,9 @@ fn main() raises:
             else:
                 _ = part_2(file_path)
 
-        var time_ms = run[bench_fn](max_iters=30).mean(Unit.ns)
-        print("part {}, t = {} us".format(part, round(time_ms / 1000.0, 1)))
+        var time_ns = run[bench_fn](max_iters=30).mean(Unit.ns)
+        var time_us = round(time_ns / 1000.0, 1)
+        print("part {}, t = {} us".format(part, time_us))
 
     bench[1]()
     bench[2]()

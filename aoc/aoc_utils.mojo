@@ -1,6 +1,12 @@
 from algorithm import parallelize
 from os import Atomic
 
+comptime aoc_2025_base_path = "/home/jgs/mojo/learn_mojo/aoc/2025"
+
+fn input_paths[day: Int]() -> Tuple[String, String]:
+    var test_file_path = aoc_2025_base_path + "/d" + String(day) + "/test_input.txt"
+    var file_path = aoc_2025_base_path + "/d" + String(day) + "/input.txt"
+    return (test_file_path, file_path)
 
 fn sum_file[
     process_fn: fn (StringSlice) raises -> Int,
