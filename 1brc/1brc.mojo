@@ -5,26 +5,25 @@ from bit import count_leading_zeros, count_trailing_zeros
 from algorithm import parallelize
 from sys import num_physical_cores
 from benchmark import run, Unit
+from testing import assert_equal
+import os
 
-# =============================================================================
+
 # Constants
-# =============================================================================
-alias simd_width = simd_width_of[DType.uint8]()
-alias bits_type = DType.uint64 if simd_width == 64 else DType.uint32
+comptime simd_width = simd_width_of[DType.uint8]()
+comptime bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
-alias middle = ord(";")
-alias new_line = ord("\n")
-alias NEG = ord("-")
-alias ZERO = ord("0")
-alias DOT = ord(".")
+comptime SEMICOLON = ord(";")
+comptime NEW_LINE = ord("\n")
+comptime MINUS = ord("-")
+comptime ZERO = ord("0")
+comptime DOT = ord(".")
 
 
-# =============================================================================
 # Measurement struct
-# =============================================================================
 @fieldwise_init
 @register_passable("trivial")
-struct MeasurementFloat(Copyable & Movable & Writable):
+struct MeasurementFloat(Copyable & Writable):
     var min: Float64
     var mean: Float64
     var max: Float64
@@ -37,20 +36,17 @@ struct MeasurementFloat(Copyable & Movable & Writable):
         self.n += 1.0
 
     fn __str__(self) -> String:
-        return String(
-            round(self.min, 1),
-            "/",
-            round(self.mean, 1),
-            "/",
-            round(self.max, 1),
-        )
+        var min = round(self.min, 1)
+        var max = round(self.max, 1)
+        var mean = round(self.mean, 1)
+        return String(min, "/", mean, "/", max)
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
 
 
 @register_passable("trivial")
-struct MeasurementInt(Copyable & Movable & Writable):
+struct MeasurementInt(Copyable & Writable):
     var min: Int
     var sum: Int
     var max: Int
@@ -77,20 +73,18 @@ struct MeasurementInt(Copyable & Movable & Writable):
         self.n += other.n
 
     fn __str__(self) -> String:
-        var min = Float32(self.min) / 10.0
-        var max = Float32(self.max) / 10.0
-        var mean = Float32(self.sum) / 10.0 / Float32(self.n)
-        return String(round(min, 1), "/", round(mean, 1), "/", round(max, 1))
+        var min = round(Float32(self.min) / 10.0, 1)
+        var max = round(Float32(self.max) / 10.0, 1)
+        var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
+        return String(min, "/", mean, "/", max)
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
 
 
-# =============================================================================
 # format_output
-# =============================================================================
 fn format_output[
-    M: Copyable & Movable & Writable
+    M: Copyable & Writable
 ](d: Dict[String, M]) raises -> String:
     """
     Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
@@ -113,7 +107,7 @@ fn format_output[
 
 
 fn format_output[
-    M: Copyable & Movable & Writable
+    M: Copyable & Writable
 ](
     final_dict: Dict[UInt64, M],
     city_names: Dict[UInt64, String],
@@ -137,9 +131,7 @@ fn format_output[
     return result
 
 
-# =============================================================================
 # process_chunk
-# =============================================================================
 fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
     # Simple inline hash - no string allocation!
     var h: UInt64 = 0
@@ -163,8 +155,8 @@ fn process_chunk[
 
     while pos + simd_width < end:
         var chunk = data_ptr.load[width=simd_width](pos)
-        var newlines = pack_bits[bits_type](chunk.eq(new_line))
-        var semicolons = pack_bits[bits_type](chunk.eq(middle))
+        var newlines = pack_bits[bits_type](chunk.eq(NEW_LINE))
+        var semicolons = pack_bits[bits_type](chunk.eq(SEMICOLON))
 
         if newlines == 0:
             # to not break temperature in two chunks
@@ -183,13 +175,13 @@ fn process_chunk[
             var hash_city = fast_hash(data_ptr + line_start, city_len)
 
             # parse value
-            alias vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
-            alias vec_2d = SIMD[DType.int16, 4](10, 0, 1, 0)  # d.dX
+            comptime vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
+            comptime vec_2d = SIMD[DType.int16, 4](10, 0, 1, 0)  # d.dX
 
             var val_start_idx = pos + semicolon_idx + 1
             var num_len = newline_idx - (semicolon_idx + 1)
 
-            var is_neg = data[val_start_idx] == NEG
+            var is_neg = data[val_start_idx] == MINUS
             var sign = 1 - (Int(is_neg) << 1)
 
             var val_abs_start = val_start_idx + Int(is_neg)
@@ -209,7 +201,7 @@ fn process_chunk[
                     val_short * Int(is_short) + val_long * Int(not is_short)
                 )
             elif temp_alg == "v5":
-                alias vec_digits = vec_3d.interleave(vec_2d)
+                comptime vec_digits = vec_3d.interleave(vec_2d)
 
                 var digits_4 = SIMD[DType.int16, 4](
                     data_ptr.load[width=4](val_abs_start) - ZERO
@@ -272,9 +264,7 @@ fn process_chunk[
                 city_names[hash_city] = city
 
 
-# =============================================================================
 # parallel
-# =============================================================================
 fn find_next_newline(data: Span[UInt8], start: Int) -> Int:
     """Find the next newline after start position."""
     for i in range(start, len(data)):
@@ -349,70 +339,31 @@ fn process_parallel[
     return format_output(final_dict, final_city_names)
 
 
-# =============================================================================
-# Memory Mapped File
-# =============================================================================
 struct MMap:
-    """Simple memory-mapped file for reading."""
-
-    var _data: UnsafePointer[UInt8, MutOrigin.external]
+    """Memory Mapped File."""
+    comptime ptr = UnsafePointer[UInt8, MutOrigin.external]
+    var _data: Self.ptr
     var _size: Int
 
     fn __init__(out self, path: String) raises:
-        """Memory map a file for reading.
-        Args:
-            path: Path to the file.
-        """
-        # Open file
-        var fd = external_call["open", Int](path.unsafe_ptr(), 0, 0)  # O_RDONLY
-        if fd < 0:
-            raise Error("Failed to open file: " + path)
+        with open(path, "r") as file:
+            self._size = Int(file.seek(0, os.SEEK_END))
 
-        # Get file size
-        var stat_buf = alloc[Int](20)
-        var ret = external_call["fstat", Int](fd, stat_buf)
-        if ret != 0:
-            stat_buf.free()
-            _ = external_call["close", Int](fd)
-            raise Error("Failed to get file size")
+            self._data = external_call["mmap", Self.ptr](
+                Self.ptr(),  # addr (let kernel choose)
+                self._size,  # length
+                1,  # PROT_READ
+                1,  # MAP_SHARED
+                file._get_raw_fd(),  # fd
+                0,  # offset
+            )
 
-        self._size = stat_buf[6]  # st_size
-        stat_buf.free()
-
-        # Memory map the file
-        # mmap returns a pointer - we specify the return type and Mojo handles the conversion
-        self._data = external_call[
-            "mmap", UnsafePointer[UInt8, MutOrigin.external]
-        ](
-            UnsafePointer[
-                UInt8, MutOrigin.external
-            ](),  # addr (let kernel choose)
-            self._size,  # length
-            1,  # PROT_READ
-            1,  # MAP_SHARED
-            fd,  # fd
-            0,  # offset
-        )
-
-        # Close fd (not needed after mmap)
-        _ = external_call["close", Int](fd)
-
-        # Check if mmap failed (returns MAP_FAILED which is -1 cast to pointer)
         if Int(self._data) == -1:
             raise Error("mmap failed")
 
     fn __del__(deinit self):
-        """Unmap the memory."""
         if self._data:
             _ = external_call["munmap", Int](self._data, self._size)
-
-    fn __getitem__(self, idx: Int) -> UInt8:
-        """Get byte at index."""
-        return self._data[idx]
-
-    fn read[width: Int](self, start: Int) -> SIMD[DType.uint8, width]:
-        """Read a SIMD vector of bytes at the given offset."""
-        return self._data.load[width=width](start)
 
     fn as_span[
         mut: Bool,
@@ -424,9 +375,6 @@ struct MMap:
         )
 
 
-# =============================================================================
-# dispatch function
-# =============================================================================
 fn process_1brc[version: Int](file_path: String) raises -> String:
     """
     Unified 1BRC processor using compile-time version selection.
@@ -536,49 +484,46 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
 
 
 fn main() raises:
-    alias file_path = "./measurements.txt"
+    comptime file_path = "./measurements.txt"
+    comptime hash_1M = 12990781359592090910
 
     print("1BRC Unified Implementation")
     print("Cores:", num_physical_cores())
     print()
 
     @parameter
-    fn test_version[v: Int]():
-        try:
-            print("Testing v" + String(v) + "...")
-            var result = process_1brc[v](file_path)
-            var result_hash = hash(result)
-            print("  Hash:", result_hash)
+    fn test[v: Int]() raises:
+        var result = process_1brc[v](file_path)
+        var result_hash = hash(result)
 
-            # Save output
-            var filename = String("output_v", v, ".txt")
-            with open(filename, "w") as f:
-                f.write(result)
-        except e:
-            print("  Error:", e)
+        assert_equal(result_hash, hash_1M)
 
-    test_version[0]()
-    test_version[1]()
-    test_version[2]()
-    test_version[3]()
-    test_version[4]()
-    test_version[5]()
-    test_version[6]()
+        var filename = String("output/v", v, ".txt")
+        with open(filename, "w") as f:
+            f.write(result)
 
-    print("\nBenchmarking...")
+    test[0]()
+    test[1]()
+    test[2]()
+    test[3]()
+    test[4]()
+    test[5]()
+    test[6]()
+
+    print("Benchmarking...")
 
     @parameter
-    fn bench_version[v: Int]() raises:
+    fn bench[v: Int]() raises:
         fn bench_fn() raises:
             _ = process_1brc[v](file_path)
 
         var time_ms = run[bench_fn](max_iters=10).mean(Unit.ms)
         print("v" + String(v) + ":", round(time_ms, 1), "ms")
 
-    bench_version[0]()
-    bench_version[1]()
-    bench_version[2]()
-    bench_version[3]()
-    bench_version[4]()
-    bench_version[5]()
-    bench_version[6]()
+    bench[0]()
+    bench[1]()
+    bench[2]()
+    bench[3]()
+    bench[4]()
+    bench[5]()
+    bench[6]()
