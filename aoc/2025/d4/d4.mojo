@@ -4,54 +4,77 @@ from itertools import product
 
 from aoc.aoc_utils import sum_file, input_paths
 
+struct Grid(Copyable):
+    var data: List[Int8]
+    var h: Int
+    var w: Int
+
+    fn __init__(out self, w: Int, h: Int):
+        self.data = List[Int8](length=h * w, fill=0)
+        self.h = h
+        self.w = w
+
+    fn get(self, i: Int, j: Int) -> Int8:
+        return self.data[i * self.w + j]
+
+    fn set(mut self, i: Int, j: Int, v:Int8):
+        self.data[i * self.w + j] = v
+
 
 fn day4[part: Int](file_path: String) raises -> Int:
-    var grid: List[List[Int]] = []
+    var grid: Grid
     with open(file_path, "r") as f:
-        for line in f.read().split("\n"):
-            var bob: List[Int] = []
+        var content = f.read().split("\n")
+        var nb_line = len(content[0])
+        # hard code zero padding for 3x3 kernel
+        grid = Grid(nb_line+2, nb_line+2)
+
+        for i, line in enumerate(content):
             if len(line) == 0:
                 continue
-            for e in line.codepoint_slices():
-                if e == ".":
-                    bob.append(0)
-                elif e == "@":
-                    bob.append(1)
-                else:
-                    print("oops")
-            grid.append(bob^)
-
-    var new_grid = grid.copy()
-    var len_y = len(grid[0])
-    var len_x = len(grid)
-    var kernel = [[1, 1, 1], [1, 0, 1], [1, 1, 1]]
-    # print(len_y, len_x)
+            for j, e in enumerate(line.codepoint_slices()):
+                if e == "@":
+                    grid.set(i+1, j+1, 1)
 
     var num = 0
+    var changed = List[Tuple[Int, Int]]()
     while True:
-        var done_this_turn = 0
-        # convolution
-        for x, y in product(range(len_x), range(len_y)):
-            var cell_value = 0
-            for dx, dy in product(range(-1, 2), range(-1, 2)):
-                var nx = x + dx
-                var ny = y + dy
-                if nx >= 0 and nx < len_x and ny >= 0 and ny < len_y:
-                    cell_value += grid[nx][ny] * kernel[dx + 1][dy + 1]
-            if cell_value < 4 and grid[x][y] == 1:
+        # # convolution
+        # for x, y in product(range(len_x), range(len_y)):
+        #     var cell_value = 0
+        #     for dx, dy in product(range(-1, 2), range(-1, 2)):
+        #         var nx = x + dx
+        #         var ny = y + dy
+        #         if nx >= 0 and nx < len_x and ny >= 0 and ny < len_y:
+        #             cell_value += grid[nx][ny] * kernel[dx + 1][dy + 1]
+        
+        # hard coded convolution
+        for x, y in product(range(1, grid.h+1), range(1, grid.w+1)):
+            var cell_value : Int8 = 0
+            cell_value += grid.get(x-1, y-1)
+            cell_value += grid.get(x-1, y)
+            cell_value += grid.get(x-1, y+1)
+            cell_value += grid.get(x, y-1)
+            # cell_value += grid.get(x, y)
+            cell_value += grid.get(x, y+1)
+            cell_value += grid.get(x+1, y-1)
+            cell_value += grid.get(x+1, y)
+            cell_value += grid.get(x+1, y+1)
+
+            if cell_value < 4 and grid.get(x, y) == 1:
                 num += 1
-                new_grid[x][y] = 0
-                done_this_turn += 1
+                changed.append((x, y))
 
         @parameter
         if part == 1:
             break
 
-        if done_this_turn == 0:
+        if len(changed) == 0:
             break
 
-        grid = new_grid.copy()
-        # print("turn done, ", done_this_turn)
+        for cx, cy in changed:
+            grid.set(cx, cy, 0)
+        changed.clear()
 
     return num
 

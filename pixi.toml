@@ -9,14 +9,16 @@ version = "0.1.0"
 aoc25 = """
 mojo aoc/2025/d1/d1.mojo &&
 mojo aoc/2025/d2/d2.mojo &&
-mojo aoc/2025/d3/d3.mojo
+mojo aoc/2025/d3/d3.mojo &&
+mojo aoc/2025/d4/d4.mojo
 """
 
 
 [dependencies]
-python = ">=3.14.1,<3.15"
+python = ">=3.14.2,<3.15"
 numpy = ">=2.3.5,<3"
-polars = ">=1.35.2,<2"
+polars = ">=1.36.1,<2"
 tqdm = ">=4.67.1,<5"
-mojo = ">=0.26.1.0.dev2025120323,<0.27"
+mojo = ">=0.26.1.0.dev2025121217,<0.27"
 pillow = ">=12.0.0,<13"
+max = ">=26.1.0.dev2025121217,<27"
