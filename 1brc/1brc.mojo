@@ -9,17 +9,6 @@ from testing import assert_equal
 import os
 
 
-# Constants
-comptime simd_width = simd_width_of[DType.uint8]()
-comptime bits_type = DType.uint64 if simd_width == 64 else DType.uint32
-
-comptime SEMICOLON = ord(";")
-comptime NEW_LINE = ord("\n")
-comptime MINUS = ord("-")
-comptime ZERO = ord("0")
-comptime DOT = ord(".")
-
-
 # Measurement struct
 @fieldwise_init
 @register_passable("trivial")
@@ -77,7 +66,7 @@ struct MeasurementInt(Copyable & Writable):
         var max = round(Float32(self.max) / 10.0, 1)
         var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
         return String(min, "/", mean, "/", max)
-
+        
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
 
@@ -98,7 +87,7 @@ fn format_output[
     var result = String("{")
     for i in range(len(cities)):
         var city = cities[i]
-        var measurement = d[city].copy()
+        ref measurement = d[city]
         if i > 0:
             result += ", \n"
         result += city + "=" + String(measurement)
@@ -122,7 +111,7 @@ fn format_output[
         var city = cities[i]
         var city_bytes = city.as_bytes()
         var hash_city = fast_hash(city_bytes.unsafe_ptr(), len(city_bytes))
-        var measurement = final_dict[hash_city].copy()
+        ref measurement = final_dict[hash_city]
         if i > 0:
             result += ", \n"
         result += city + "=" + String(measurement)
@@ -149,6 +138,15 @@ fn process_chunk[
     mut d: Dict[UInt64, MeasurementInt],
     mut city_names: Dict[UInt64, String],
 ) raises -> None:
+    comptime simd_width = simd_width_of[DType.uint8]()
+    comptime bits_type = DType.uint64 if simd_width == 64 else DType.uint32
+
+    comptime SEMICOLON = ord(";")
+    comptime NEW_LINE = ord("\n")
+    comptime MINUS = ord("-")
+    comptime ZERO = ord("0")
+    comptime DOT = ord(".")
+
     var data_ptr = data.unsafe_ptr()
     var pos = start
     var line_start = pos
@@ -347,14 +345,17 @@ struct MMap:
 
     fn __init__(out self, path: String) raises:
         with open(path, "r") as file:
+            comptime PROT_READ = 1
+            comptime MAP_SHARED = 1
+            
             self._size = Int(file.seek(0, os.SEEK_END))
 
             self._data = external_call["mmap", Self.ptr](
                 Self.ptr(),  # addr (let kernel choose)
-                self._size,  # length
-                1,  # PROT_READ
-                1,  # MAP_SHARED
-                file._get_raw_fd(),  # fd
+                self._size,
+                PROT_READ,
+                MAP_SHARED, 
+                file._get_raw_fd(),
                 0,  # offset
             )
 
@@ -486,6 +487,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
 fn main() raises:
     comptime file_path = "./measurements.txt"
     comptime hash_1M = 7830574609753597440
+    comptime hash_100M = 7465477878325822113
 
     print("1BRC Unified Implementation")
     print("Cores:", num_physical_cores())
@@ -497,6 +499,7 @@ fn main() raises:
         var result_hash = hash(result)
 
         assert_equal(result_hash, hash_1M)
+        # assert_equal(result_hash, hash_100M)
 
         var filename = String("output/v", v, ".txt")
         with open(filename, "w") as f:
