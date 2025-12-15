@@ -2,24 +2,17 @@ from testing import assert_equal
 from benchmark import run, Unit
 from aoc.aoc_utils import input_paths
 
+
 fn part_1(file_path: String) raises -> Int:
     var pos = 50
     var n_zero = 0
     with open(file_path, "r") as f:
-        var lines = f.read().split("\n")
-        for line in lines:
+        for line in f.read().split("\n"):
             if len(line) == 0:
                 continue
-            var dir_letter = line[0]
+            var dir_letter = line.as_bytes()[0]
             var mag = atol(line[1:])
-            var dir: Int
-            if dir_letter == "L":
-                dir = -1
-            elif dir_letter == "R":
-                dir = 1
-            else:
-                raise Error("bad dir" + dir_letter)
-
+            var dir = -1 if dir_letter == ord("L") else 1
             pos = (pos + dir * mag) % 100
             if pos == 0:
                 n_zero += 1
@@ -30,19 +23,12 @@ fn part_2(file_path: String) raises -> Int:
     var pos = 50
     var n_zero = 0
     with open(file_path, "r") as f:
-        var lines = f.read().split("\n")
-        for line in lines:
+        for line in f.read().split("\n"):
             if len(line) == 0:
                 continue
-            var dir_letter = line[0]
+            var dir_letter = line.as_bytes()[0]
             var mag = atol(line[1:])
-            var dir: Int
-            if dir_letter == "L":
-                dir = -1
-            elif dir_letter == "R":
-                dir = 1
-            else:
-                raise Error("bad dir" + dir_letter)
+            var dir = -1 if dir_letter == ord("L") else 1
             n_zero_free = mag // 100
             n_zero += n_zero_free
 

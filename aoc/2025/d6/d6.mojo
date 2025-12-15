@@ -37,16 +37,16 @@ fn day6_p1(file_path: String) raises -> Int:
                 filtered.append(atol(e))
             nums.append(filtered^)
 
-        var operators = List[String]()
+        var operators = List[Int]()
         for e in content[-1].split(" "):
             if len(e) == 0:
                 continue
-            operators.append(String(e))
+            operators.append(ord(e))
 
         for j, operator in enumerate(operators):
-            var val = 0 if operator == "+" else 1
+            var val = 0 if operator == ord("+") else 1
             for i in range(nb_line_numbers):
-                if operator == "+":
+                if operator == ord("+"):
                     val += nums[i][j]
                 else:
                     val *= nums[i][j]
@@ -65,12 +65,12 @@ fn day6_p2(file_path: String) raises -> Int:
         # make values
         var grid = Grid(nb_char, nb_line_numbers)
         for i in range(nb_line_numbers):
-            for j, e in enumerate(content[i].codepoint_slices()):
+            for j, e in enumerate(content[i].as_bytes()):
                 var value: Int
-                if e == " ":
+                if e == ord(" "):
                     value = -1
                 else:
-                    value = atol(e)
+                    value = Int(e) - ord("0")
                 grid.set(i, j, value)
 
         var values = List[Int](capacity=nb_char)

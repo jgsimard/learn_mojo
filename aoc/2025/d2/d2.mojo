@@ -56,7 +56,6 @@ fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
 
         return value
 
-
     return sum_file[process_range[ver], parallel, ","](file_path)
 
 
@@ -69,7 +68,7 @@ fn get_n_digits[version: String = "str"](v: Int) -> Int:
     elif version == "str":
         return len(String(v))
 
-    else: # basic
+    else:  # basic
         var temp = v
         var n_digits = 0
         while temp > 0:
@@ -116,13 +115,13 @@ fn main() raises:
 
     print("\nAoC 2025 - Day 2")
 
-    comptime ver = [0,1,2]
+    comptime ver = [0, 1, 2]
     comptime par = [False, True]
 
     @parameter
     for v, p in product(ver, par):
         assert_equal(part_1[v, p](test_file_path), 1227775554)
-    
+
     print("part 1:", part_1[2](file_path))
 
     assert_equal(part_2(test_file_path), 4174379265)
@@ -150,7 +149,6 @@ fn main() raises:
     # bench[1, 0, True]()
     # bench[1, 1, True]()
     bench[1, 2, True]()
-
 
     # bench[2, 0]()
     bench[2, 0, True]()
