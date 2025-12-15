@@ -18,7 +18,7 @@ fn day7[p: Int](file_path: String) raises -> Int:
                 break
         var next_origins = List[Int](length=len(current_origins), fill=0)
 
-        for line in lines[1:]:
+        for line in lines[2::2]:
             memset_zero(next_origins.unsafe_ptr(), len(next_origins))
             for i, (e, o) in enumerate(zip(line.as_bytes(), current_origins)):
                 if o > 0:
