@@ -12,25 +12,23 @@ fn day7[p: Int](file_path: String) raises -> Int:
         var lines = f.read().split("\n")
 
         var current_origins = List[Int](length=len(lines[0]), fill=0)
-        for i, e in enumerate(lines[0].codepoint_slices()):
-            if e == "S":
+        for i, e in enumerate(lines[0].as_bytes()):
+            if e == ord("S"):
                 current_origins[i] = 1
                 break
         var next_origins = List[Int](length=len(current_origins), fill=0)
 
-        for new_line in lines[1:]:
+        for line in lines[1:]:
             memset_zero(next_origins.unsafe_ptr(), len(next_origins))
-            for i, (n, o) in enumerate(
-                zip(new_line.codepoint_slices(), current_origins)
-            ):
+            for i, (e, o) in enumerate(zip(line.as_bytes(), current_origins)):
                 if o > 0:
-                    if n == "^":
+                    if e == ord("^"):
                         total_split += 1
                         total_world += o
                         # never at a border so no need to check
                         next_origins[i - 1] += o
                         next_origins[i + 1] += o
-                    elif n == ".":
+                    elif e == ord("."):
                         next_origins[i] += o
             swap(current_origins, next_origins)
 
