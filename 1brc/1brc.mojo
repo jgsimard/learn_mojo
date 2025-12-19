@@ -136,21 +136,22 @@ fn process_chunk[
     mut d: Dict[UInt64, MeasurementInt],
     mut city_names: Dict[UInt64, String],
 ) raises -> None:
-    comptime simd_width = simd_width_of[DType.uint8]()
-    comptime bits_type = DType.uint64 if simd_width == 64 else DType.uint32
-
-    comptime SEMICOLON = ord(";")
-    comptime NEW_LINE = ord("\n")
-    comptime MINUS = ord("-")
-    comptime ZERO = ord("0")
-    comptime DOT = ord(".")
-
-    var data_ptr = data.unsafe_ptr()
     var pos = start
     var line_start = pos
 
     @parameter
     if simd_parsing:
+        comptime simd_width = simd_width_of[DType.uint8]()
+        comptime bits_type = DType.uint64 if simd_width == 64 else DType.uint32
+
+        comptime SEMICOLON = ord(";")
+        comptime NEW_LINE = ord("\n")
+        comptime MINUS = ord("-")
+        comptime ZERO = ord("0")
+        comptime DOT = ord(".")
+
+        var data_ptr = data.unsafe_ptr()
+
         while pos + simd_width < end:
             var chunk = data_ptr.load[width=simd_width](pos)
             var newlines = pack_bits[bits_type](chunk.eq(NEW_LINE))
@@ -168,7 +169,9 @@ fn process_chunk[
                 var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
 
                 # Parse city
-                var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
+                var semicolon_idx = count_trailing_zeros(
+                    semicolons & search_mask
+                )
                 var city_len = pos + Int(semicolon_idx) - line_start
                 var hash_city = fast_hash(data_ptr + line_start, city_len)
 
@@ -200,7 +203,9 @@ fn process_chunk[
                     var val_short = (digits * vec_2d).reduce_add()
 
                     var is_short = Int((num_len - is_neg) == 3)  # d.d
-                    var val_abs = val_short * is_short + val_long * (1 - is_short)
+                    var val_abs = val_short * is_short + val_long * (
+                        1 - is_short
+                    )
                     val = Int(sign * val_abs)
 
                 elif temp_alg == "v5":
@@ -246,23 +251,21 @@ fn process_chunk[
 
     # tail = scalar
     if pos < end:
-        var tail = String(bytes=data[pos : end - 1])
+        var tail = StringSlice(from_utf8=data[pos : end - 1])
         for l in tail.split("\n"):
             if len(l) == 0:
                 continue
             var station = l.split(";")
-            var city = String(station[0])
+            var city = station[0]
             var val = atol(station[1].replace(".", ""))
 
-            # Hash the city for tail processing
-            var city_bytes = city.as_bytes()
-            var hash_city = fast_hash(city_bytes.unsafe_ptr(), len(city_bytes))
+            var hash_city = fast_hash(city.unsafe_ptr(), len(city))
 
-            if d.get(hash_city):
+            if hash_city in d:
                 d[hash_city].update(val)
             else:
                 d[hash_city] = MeasurementInt(val)
-                city_names[hash_city] = city
+                city_names[hash_city] = String(city)
 
 
 # parallel
@@ -372,8 +375,7 @@ struct MMap:
 
     fn as_span[
         mut: Bool,
-        origin: Origin[mut],
-        //,
+        origin: Origin[mut], //,
     ](ref [origin]self) -> Span[UInt8, origin]:
         return Span(
             ptr=self._data.mut_cast[mut]().unsafe_origin_cast[origin](),
