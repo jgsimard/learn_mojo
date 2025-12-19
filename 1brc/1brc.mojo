@@ -66,15 +66,13 @@ struct MeasurementInt(Copyable & Writable):
         var max = round(Float32(self.max) / 10.0, 1)
         var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
         return String(min, "/", mean, "/", max)
-        
+
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
 
 
 # format_output
-fn format_output[
-    M: Copyable & Writable
-](d: Dict[String, M]) raises -> String:
+fn format_output[M: Copyable & Writable](d: Dict[String, M]) raises -> String:
     """
     Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
     Cities are sorted alphabetically.
@@ -179,25 +177,30 @@ fn process_chunk[
             var val_start_idx = pos + semicolon_idx + 1
             var num_len = newline_idx - (semicolon_idx + 1)
 
-            var is_neg = data[val_start_idx] == MINUS
-            var sign = 1 - (Int(is_neg) << 1)
+            var is_neg = Int(data[val_start_idx] == MINUS)
+            var sign = 1 - (is_neg << 1)
 
-            var val_abs_start = val_start_idx + Int(is_neg)
+            var val_abs_start = val_start_idx + is_neg
 
-            var val: Int16
+            var val: Int
 
             @parameter
             if temp_alg == "v2":
+                # slower if i load from chunk-- why ???
+                # base = semicolon_idx + 1 + Int(is_neg)
+                # var digits = SIMD[DType.int16, 4](chunk.as_bytes().unsafe_ptr().load[width=4](base) - ZERO)
+                # var bob = chunk.slice[4]()
+                # var bb = chunk.shift_left()
                 var digits = SIMD[DType.int16, 4](
                     data_ptr.load[width=4](val_abs_start) - ZERO
                 )
                 var val_long = (digits * vec_3d).reduce_add()
                 var val_short = (digits * vec_2d).reduce_add()
 
-                var is_short = (num_len - Int(is_neg)) == 3  # d.d
-                val = sign * (
-                    val_short * Int(is_short) + val_long * Int(not is_short)
-                )
+                var is_short = Int((num_len - is_neg) == 3)  # d.d
+                var val_abs = val_short * is_short + val_long * (1 - is_short)
+                val = Int(sign * val_abs)
+
             elif temp_alg == "v5":
                 comptime vec_digits = vec_3d.interleave(vec_2d)
 
@@ -209,28 +212,26 @@ fn process_chunk[
                 var digits_8 = digits_4.interleave(digits_4)
                 var vals = (digits_8 * vec_digits).reduce_add[2]()
 
-                var is_short = (num_len - Int(is_neg)) == 3  # d.d
-                var val_abs = vals[0] * Int(not is_short) + vals[1] * Int(
-                    is_short
-                )
-                val = sign * val_abs
+                var is_short = Int((num_len - is_neg) == 3)  # d.d
+                var val_abs = vals[0] * (1 - is_short) + vals[1] * is_short
+                val = Int(sign * val_abs)
             else:
                 raise "unsuported version"
 
             @parameter
             if try_update:
                 try:
-                    d[hash_city].update(Int(val))
+                    d[hash_city].update(val)
                 except:
-                    d[hash_city] = MeasurementInt(Int(val))
+                    d[hash_city] = MeasurementInt(val)
                     city_names[hash_city] = String(
                         bytes=data[line_start : pos + Int(semicolon_idx)]
                     )
             else:
                 if hash_city in d:
-                    d[hash_city].update(Int(val))
+                    d[hash_city].update(val)
                 else:
-                    d[hash_city] = MeasurementInt(Int(val))
+                    d[hash_city] = MeasurementInt(val)
                     city_names[hash_city] = String(
                         bytes=data[line_start : pos + Int(semicolon_idx)]
                     )
@@ -339,6 +340,7 @@ fn process_parallel[
 
 struct MMap:
     """Memory Mapped File."""
+
     comptime ptr = UnsafePointer[UInt8, MutOrigin.external]
     var _data: Self.ptr
     var _size: Int
@@ -347,14 +349,14 @@ struct MMap:
         with open(path, "r") as file:
             comptime PROT_READ = 1
             comptime MAP_SHARED = 1
-            
+
             self._size = Int(file.seek(0, os.SEEK_END))
 
             self._data = external_call["mmap", Self.ptr](
                 Self.ptr(),  # addr (let kernel choose)
                 self._size,
                 PROT_READ,
-                MAP_SHARED, 
+                MAP_SHARED,
                 file._get_raw_fd(),
                 0,  # offset
             )
@@ -368,7 +370,8 @@ struct MMap:
 
     fn as_span[
         mut: Bool,
-        origin: Origin[mut], //,
+        origin: Origin[mut],
+        //,
     ](ref [origin]self) -> Span[UInt8, origin]:
         return Span(
             ptr=self._data.mut_cast[mut]().unsafe_origin_cast[origin](),
@@ -401,7 +404,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
                 var station = l.split(";")
                 var city = String(station[0])
                 var val = atof(station[1])
-                if d.get(city):
+                if city in d:
                     d[city].update(val)
                 else:
                     d[city] = MeasurementFloat(val, val, val, 1.0)
@@ -417,14 +420,8 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
                 var station = l.split(";")
                 var city = String(station[0])
                 var val = atol(station[1].replace(".", ""))
-                var m_maybe = d.get(city)
-                if m_maybe:
-                    var m = m_maybe.value().copy()
-                    m.min = min(val, m.min)
-                    m.max = max(val, m.max)
-                    m.n += 1
-                    m.sum += val
-                    d[city] = m
+                if city in d:
+                    d[city].update(val)
                 else:
                     d[city] = MeasurementInt(val)
         return format_output(d)
