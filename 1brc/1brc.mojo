@@ -128,7 +128,7 @@ fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
 
 
 fn process_chunk[
-    temp_alg: String = "v5", try_update: Bool = False
+    temp_alg: String = "v5", try_update: Bool = False, simd_parsing: Bool = True
 ](
     data: Span[UInt8],
     start: Int,
@@ -149,98 +149,100 @@ fn process_chunk[
     var pos = start
     var line_start = pos
 
-    while pos + simd_width < end:
-        var chunk = data_ptr.load[width=simd_width](pos)
-        var newlines = pack_bits[bits_type](chunk.eq(NEW_LINE))
-        var semicolons = pack_bits[bits_type](chunk.eq(SEMICOLON))
+    @parameter
+    if simd_parsing:
+        while pos + simd_width < end:
+            var chunk = data_ptr.load[width=simd_width](pos)
+            var newlines = pack_bits[bits_type](chunk.eq(NEW_LINE))
+            var semicolons = pack_bits[bits_type](chunk.eq(SEMICOLON))
 
-        if newlines == 0:
-            # to not break temperature in two chunks
-            pos += Int(count_leading_zeros(semicolons))
-            continue
+            if newlines == 0:
+                # to not break temperature in two chunks
+                pos += Int(count_leading_zeros(semicolons))
+                continue
 
-        var start_of_line_idx = 0
+            var start_of_line_idx = 0
 
-        while newlines != 0:
-            var newline_idx = count_trailing_zeros(newlines)
-            var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
+            while newlines != 0:
+                var newline_idx = count_trailing_zeros(newlines)
+                var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
 
-            # Parse city
-            var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
-            var city_len = pos + Int(semicolon_idx) - line_start
-            var hash_city = fast_hash(data_ptr + line_start, city_len)
+                # Parse city
+                var semicolon_idx = count_trailing_zeros(semicolons & search_mask)
+                var city_len = pos + Int(semicolon_idx) - line_start
+                var hash_city = fast_hash(data_ptr + line_start, city_len)
 
-            # parse value
-            comptime vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
-            comptime vec_2d = SIMD[DType.int16, 4](10, 0, 1, 0)  # d.dX
+                # parse value
+                comptime vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
+                comptime vec_2d = SIMD[DType.int16, 4](10, 0, 1, 0)  # d.dX
 
-            var val_start_idx = pos + semicolon_idx + 1
-            var num_len = newline_idx - (semicolon_idx + 1)
+                var val_start_idx = pos + semicolon_idx + 1
+                var num_len = newline_idx - (semicolon_idx + 1)
 
-            var is_neg = Int(data[val_start_idx] == MINUS)
-            var sign = 1 - (is_neg << 1)
+                var is_neg = Int(data[val_start_idx] == MINUS)
+                var sign = 1 - (is_neg << 1)
 
-            var val_abs_start = val_start_idx + is_neg
+                var val_abs_start = val_start_idx + is_neg
 
-            var val: Int
+                var val: Int
 
-            @parameter
-            if temp_alg == "v2":
-                # slower if i load from chunk-- why ???
-                # base = semicolon_idx + 1 + Int(is_neg)
-                # var digits = SIMD[DType.int16, 4](chunk.as_bytes().unsafe_ptr().load[width=4](base) - ZERO)
-                # var bob = chunk.slice[4]()
-                # var bb = chunk.shift_left()
-                var digits = SIMD[DType.int16, 4](
-                    data_ptr.load[width=4](val_abs_start) - ZERO
-                )
-                var val_long = (digits * vec_3d).reduce_add()
-                var val_short = (digits * vec_2d).reduce_add()
-
-                var is_short = Int((num_len - is_neg) == 3)  # d.d
-                var val_abs = val_short * is_short + val_long * (1 - is_short)
-                val = Int(sign * val_abs)
-
-            elif temp_alg == "v5":
-                comptime vec_digits = vec_3d.interleave(vec_2d)
-
-                var digits_4 = SIMD[DType.int16, 4](
-                    data_ptr.load[width=4](val_abs_start) - ZERO
-                )
-
-                # reduce_add[2] give the sum of the *interleaved* elements
-                var digits_8 = digits_4.interleave(digits_4)
-                var vals = (digits_8 * vec_digits).reduce_add[2]()
-
-                var is_short = Int((num_len - is_neg) == 3)  # d.d
-                var val_abs = vals[0] * (1 - is_short) + vals[1] * is_short
-                val = Int(sign * val_abs)
-            else:
-                raise "unsuported version"
-
-            @parameter
-            if try_update:
-                try:
-                    d[hash_city].update(val)
-                except:
-                    d[hash_city] = MeasurementInt(val)
-                    city_names[hash_city] = String(
-                        bytes=data[line_start : pos + Int(semicolon_idx)]
+                @parameter
+                if temp_alg == "v2":
+                    # slower if i load from chunk-- why ???
+                    # base = semicolon_idx + 1 + Int(is_neg)
+                    # var digits = SIMD[DType.int16, 4](chunk.as_bytes().unsafe_ptr().load[width=4](base) - ZERO)
+                    # var bob = chunk.slice[4]()
+                    # var bb = chunk.shift_left()
+                    var digits = SIMD[DType.int16, 4](
+                        data_ptr.load[width=4](val_abs_start) - ZERO
                     )
-            else:
-                if hash_city in d:
-                    d[hash_city].update(val)
+                    var val_long = (digits * vec_3d).reduce_add()
+                    var val_short = (digits * vec_2d).reduce_add()
+
+                    var is_short = Int((num_len - is_neg) == 3)  # d.d
+                    var val_abs = val_short * is_short + val_long * (1 - is_short)
+                    val = Int(sign * val_abs)
+
+                elif temp_alg == "v5":
+                    comptime vec_digits = vec_3d.interleave(vec_2d)
+
+                    var digits_4 = SIMD[DType.int16, 4](
+                        data_ptr.load[width=4](val_abs_start) - ZERO
+                    )
+
+                    # reduce_add[2] give the sum of the *interleaved* elements
+                    var digits_8 = digits_4.interleave(digits_4)
+                    var vals = (digits_8 * vec_digits).reduce_add[2]()
+
+                    var is_short = Int((num_len - is_neg) == 3)  # d.d
+                    var val_abs = vals[0] * (1 - is_short) + vals[1] * is_short
+                    val = Int(sign * val_abs)
                 else:
-                    d[hash_city] = MeasurementInt(val)
-                    city_names[hash_city] = String(
-                        bytes=data[line_start : pos + Int(semicolon_idx)]
-                    )
+                    raise "unsuported version"
 
-            start_of_line_idx = Int(newline_idx) + 1
-            line_start = pos + start_of_line_idx
-            newlines &= ~(1 << newline_idx)
+                @parameter
+                if try_update:
+                    try:
+                        d[hash_city].update(val)
+                    except:
+                        d[hash_city] = MeasurementInt(val)
+                        city_names[hash_city] = String(
+                            bytes=data[line_start : pos + Int(semicolon_idx)]
+                        )
+                else:
+                    if hash_city in d:
+                        d[hash_city].update(val)
+                    else:
+                        d[hash_city] = MeasurementInt(val)
+                        city_names[hash_city] = String(
+                            bytes=data[line_start : pos + Int(semicolon_idx)]
+                        )
 
-        pos += start_of_line_idx
+                start_of_line_idx = Int(newline_idx) + 1
+                line_start = pos + start_of_line_idx
+                newlines &= ~(1 << newline_idx)
+
+            pos += start_of_line_idx
 
     # tail = scalar
     if pos < end:
@@ -386,8 +388,8 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
     Versions:
     - 0: Basic string operations with Float64
     - 1: Fixed-point Int arithmetic
-    - 2: SIMD parsing + Hash-based city lookup (no string allocation)
-    - 3: Improved SIMD with interleave
+    - 2: Hash-based city lookup (no string allocation)
+    - 3: SIMD parsing of temperature
     - 4: Parallel processing
     - 5: Memory Mapped File
     - 6: if-else -> try-catch
@@ -434,7 +436,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         var file = open(file_path, "r")
         var data = Span[mut=False](file.read_bytes())
 
-        process_chunk[temp_alg="v2"](
+        process_chunk[temp_alg="v2", simd_parsing=False](
             data,
             0,
             len(data) - 1,
