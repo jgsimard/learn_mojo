@@ -15,11 +15,8 @@ struct Grid(Copyable):
         self.h = h
         self.w = w
 
-    fn get(self, i: Int, j: Int) -> Int8:
+    fn __getitem__(mut self, i: Int, j: Int) -> ref [self.data] Int8:
         return self.data[i * self.w + j]
-
-    fn set(mut self, i: Int, j: Int, v: Int8):
-        self.data[i * self.w + j] = v
 
 
 fn day4[part: Int](file_path: String) raises -> Int:
@@ -35,7 +32,7 @@ fn day4[part: Int](file_path: String) raises -> Int:
                 continue
             for j, e in enumerate(line.as_bytes()):
                 if e == ord("@"):
-                    grid.set(i + 1, j + 1, 1)
+                    grid[i + 1, j + 1] = 1
 
     var num = 0
     var changed = List[Tuple[Int, Int]]()
@@ -52,17 +49,17 @@ fn day4[part: Int](file_path: String) raises -> Int:
         # hard coded convolution
         for x, y in product(range(1, grid.h + 1), range(1, grid.w + 1)):
             var cell_value: Int8 = 0
-            cell_value += grid.get(x - 1, y - 1)
-            cell_value += grid.get(x - 1, y)
-            cell_value += grid.get(x - 1, y + 1)
-            cell_value += grid.get(x, y - 1)
+            cell_value += grid[x - 1, y - 1]
+            cell_value += grid[x - 1, y]
+            cell_value += grid[x - 1, y + 1]
+            cell_value += grid[x, y - 1]
             # cell_value += grid.get(x, y)
-            cell_value += grid.get(x, y + 1)
-            cell_value += grid.get(x + 1, y - 1)
-            cell_value += grid.get(x + 1, y)
-            cell_value += grid.get(x + 1, y + 1)
+            cell_value += grid[x, y + 1]
+            cell_value += grid[x + 1, y - 1]
+            cell_value += grid[x + 1, y]
+            cell_value += grid[x + 1, y + 1]
 
-            if cell_value < 4 and grid.get(x, y) == 1:
+            if cell_value < 4 and grid[x, y] == 1:
                 num += 1
                 changed.append((x, y))
 
@@ -74,7 +71,7 @@ fn day4[part: Int](file_path: String) raises -> Int:
             break
 
         for cx, cy in changed:
-            grid.set(cx, cy, 0)
+            grid[cx, cy] = 0
         changed.clear()
 
     return num

@@ -14,11 +14,8 @@ struct Grid(Copyable):
         self.h = h
         self.w = w
 
-    fn get(self, i: Int, j: Int) -> Int:
+    fn __getitem__(mut self, i: Int, j: Int) -> ref [self.data] Int:
         return self.data[i * self.w + j]
-
-    fn set(mut self, i: Int, j: Int, v: Int):
-        self.data[i * self.w + j] = v
 
 
 fn day6_p1(file_path: String) raises -> Int:
@@ -71,13 +68,13 @@ fn day6_p2(file_path: String) raises -> Int:
                     value = -1
                 else:
                     value = Int(e) - ord("0")
-                grid.set(i, j, value)
+                grid[i, j] = value
 
         var values = List[Int](capacity=nb_char)
         for j in range(nb_char):
             var val = 0
             for i in range(nb_line_numbers):
-                var value = grid.get(i, j)
+                var value = grid[i, j]
                 if value != -1:
                     val = val * 10 + value
             values.append(val)
