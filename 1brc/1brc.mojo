@@ -128,7 +128,7 @@ fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
 
 
 fn process_chunk[
-    temp_alg: String = "v5", try_update: Bool = False, simd_parsing: Bool = True
+    temp_alg: String = "v5", simd_parsing: Bool = True
 ](
     data: Span[UInt8],
     start: Int,
@@ -137,7 +137,6 @@ fn process_chunk[
     mut city_names: Dict[UInt64, String],
 ) raises -> None:
     var pos = start
-    var line_start = pos
 
     @parameter
     if simd_parsing:
@@ -151,6 +150,7 @@ fn process_chunk[
         comptime DOT = ord(".")
 
         var data_ptr = data.unsafe_ptr()
+        var line_start = pos
 
         while pos + simd_width < end:
             var chunk = data_ptr.load[width=simd_width](pos)
@@ -225,23 +225,13 @@ fn process_chunk[
                 else:
                     raise "unsuported version"
 
-                @parameter
-                if try_update:
-                    try:
-                        d[hash_city].update(val)
-                    except:
-                        d[hash_city] = MeasurementInt(val)
-                        city_names[hash_city] = String(
-                            bytes=data[line_start : pos + Int(semicolon_idx)]
-                        )
+                if hash_city in d:
+                    d[hash_city].update(val)
                 else:
-                    if hash_city in d:
-                        d[hash_city].update(val)
-                    else:
-                        d[hash_city] = MeasurementInt(val)
-                        city_names[hash_city] = String(
-                            bytes=data[line_start : pos + Int(semicolon_idx)]
-                        )
+                    d[hash_city] = MeasurementInt(val)
+                    city_names[hash_city] = String(
+                        bytes=data[line_start : pos + Int(semicolon_idx)]
+                    )
 
                 start_of_line_idx = Int(newline_idx) + 1
                 line_start = pos + start_of_line_idx
@@ -277,9 +267,7 @@ fn find_next_newline(data: Span[UInt8], start: Int) -> Int:
     return len(data)
 
 
-fn process_parallel[
-    try_update: Bool = False
-](data: Span[UInt8]) raises -> String:
+fn process_parallel(data: Span[UInt8]) raises -> String:
     var num_workers = num_physical_cores()
 
     # Calculate aligned chunk boundaries
@@ -311,7 +299,7 @@ fn process_parallel[
         var start = chunk_starts[worker_id]
         var end = chunk_ends[worker_id]
         try:
-            process_chunk[try_update=try_update](
+            process_chunk(
                 data,
                 start,
                 end,
@@ -332,9 +320,9 @@ fn process_parallel[
             var hash_key = entry.key
             var measurement = entry.value
 
-            try:
+            if hash_key in final_dict:
                 final_dict[hash_key].merge(measurement)
-            except:
+            else:
                 final_dict[hash_key] = measurement
                 final_city_names[hash_key] = thread_city_names[worker_id][
                     hash_key
@@ -375,7 +363,8 @@ struct MMap:
 
     fn as_span[
         mut: Bool,
-        origin: Origin[mut], //,
+        origin: Origin[mut],
+        //,
     ](ref [origin]self) -> Span[UInt8, origin]:
         return Span(
             ptr=self._data.mut_cast[mut]().unsafe_origin_cast[origin](),
@@ -394,7 +383,6 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
     - 3: SIMD parsing of temperature
     - 4: Parallel processing
     - 5: Memory Mapped File
-    - 6: if-else -> try-catch
     """
 
     @parameter
@@ -438,7 +426,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         var file = open(file_path, "r")
         var data = Span[mut=False](file.read_bytes())
 
-        process_chunk[temp_alg="v2", simd_parsing=False](
+        process_chunk[simd_parsing=False](
             data,
             0,
             len(data) - 1,
@@ -476,11 +464,6 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         var data = mmap_file.as_span()
         return process_parallel(data)
 
-    elif version == 6:
-        var mmap_file = MMap(file_path)
-        var data = mmap_file.as_span()
-        return process_parallel[True](data)
-
     else:
         raise "unsuported version"
 
@@ -512,7 +495,6 @@ fn main() raises:
     test[3]()
     test[4]()
     test[5]()
-    test[6]()
 
     print("Benchmarking...")
 
@@ -530,4 +512,3 @@ fn main() raises:
     bench[3]()
     bench[4]()
     bench[5]()
-    bench[6]()
