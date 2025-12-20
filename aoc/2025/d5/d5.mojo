@@ -19,10 +19,7 @@ struct Range(Comparable, Copyable, Representable, Writable):
         return self.min == rhs.min and self.max == rhs.max
 
     fn __repr__(self) -> String:
-        try:
-            return "{}-{}".format(self.min, self.max)
-        except:
-            return "bad range"
+        return "{}-{}".format(self.min, self.max)
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__repr__())
