@@ -6,16 +6,7 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
-aoc25 = """
-mojo aoc/2025/d1/d1.mojo &&
-mojo aoc/2025/d2/d2.mojo &&
-mojo aoc/2025/d3/d3.mojo &&
-mojo aoc/2025/d4/d4.mojo &&
-mojo aoc/2025/d5/d5.mojo &&
-mojo aoc/2025/d6/d6.mojo &&
-mojo aoc/2025/d7/d7.mojo &&
-mojo aoc/2025/d8/d8.mojo
-"""
+aoc25 = "python -c \"import os, sys; [sys.exit(1) for i in range(1, 13) if os.system(f'mojo aoc/2025/d{i}/d{i}.mojo') != 0]\""
 
 
 [dependencies]
@@ -23,6 +14,6 @@ python = ">=3.14.2,<3.15"
 numpy = ">=2.3.5,<3"
 polars = ">=1.36.1,<2"
 tqdm = ">=4.67.1,<5"
-mojo = ">=0.26.1.0.dev2025121919,<0.27"
+mojo = ">=0.26.1.0.dev2025122017,<0.27"
 pillow = ">=12.0.0,<13"
-max = ">=26.1.0.dev2025121919,<27"
+max = ">=26.1.0.dev2025122017,<27"
