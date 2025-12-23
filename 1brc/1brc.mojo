@@ -499,16 +499,30 @@ fn main() raises:
     print("Benchmarking...")
 
     @parameter
-    fn bench[v: Int]() raises:
+    fn bench[
+        v: Int
+    ](
+        base_time: Optional[Float64] = None, prev_time: Optional[Float64] = None
+    ) raises -> Float64:
         fn bench_fn() raises:
             _ = process_1brc[v](file_path)
 
-        var time_ms = run[bench_fn](max_iters=10).mean(Unit.ms)
-        print("v" + String(v) + ":", round(time_ms, 1), "ms")
+        var time_ms = round(run[bench_fn](max_iters=10).mean(Unit.ms), 1)
+        if base_time and prev_time:
+            var prev_speedup = round(prev_time.value() / time_ms, 1)
+            var base_speedup = round(base_time.value() / time_ms, 1)
+            print(
+                "v{} : {} ms, {} X prev, , {} X base".format(
+                    v, time_ms, prev_speedup, base_speedup
+                )
+            )
+        else:
+            print("v{} : {} ms".format(v, time_ms))
+        return time_ms
 
-    bench[0]()
-    bench[1]()
-    bench[2]()
-    bench[3]()
-    bench[4]()
-    bench[5]()
+    var t0 = bench[0]()
+    var t1 = bench[1](t0, t0)
+    var t2 = bench[2](t0, t1)
+    var t3 = bench[3](t0, t2)
+    var t4 = bench[4](t0, t3)
+    var t5 = bench[5](t0, t4)
