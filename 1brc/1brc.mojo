@@ -334,7 +334,7 @@ fn process_parallel(data: Span[UInt8]) raises -> String:
 struct MMap:
     """Memory Mapped File."""
 
-    comptime ptr = UnsafePointer[UInt8, MutOrigin.external]
+    comptime ptr = UnsafePointer[UInt8, ImmutAnyOrigin]
     var _data: Self.ptr
     var _size: Int
 
@@ -361,13 +361,9 @@ struct MMap:
         if self._data:
             _ = external_call["munmap", Int](self._data, self._size)
 
-    fn as_span[
-        mut: Bool,
-        origin: Origin[mut],
-        //,
-    ](ref [origin]self) -> Span[UInt8, origin]:
+    fn as_span(self) -> Span[UInt8, ImmutAnyOrigin]:
         return Span(
-            ptr=self._data.mut_cast[mut]().unsafe_origin_cast[origin](),
+            ptr=self._data,
             length=self._size,
         )
 
