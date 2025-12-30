@@ -1,6 +1,7 @@
 from testing import assert_equal
 from benchmark import run, Unit
 from memory import memset_zero
+from utils.numerics import max_finite
 
 from aoc.aoc_utils import input_paths
 
@@ -115,7 +116,10 @@ struct MaxHeap[T: Comparable & Copyable](Sized):
 
 
 fn l2_squared(p1: Point, p2: Point) -> Int:
-    return (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2 + (p1.z - p2.z) ** 2
+    var dx = p1.x - p2.x
+    var dy = p1.y - p2.y
+    var dz = p1.z - p2.z
+    return dx * dx + dy * dy + dz * dz
 
 
 struct DisjointSetUnion:
@@ -123,11 +127,8 @@ struct DisjointSetUnion:
     var size: List[Int]
 
     fn __init__(out self, n: Int):
-        self.parent = List[Int](capacity=1000)
-        self.size = List[Int](capacity=1000)
-        for i in range(n):
-            self.parent.append(i)
-            self.size.append(1)
+        self.parent = [i for i in range(n)]
+        self.size = [1] * n
 
     fn find(mut self, i: Int) -> Int:
         var root = i
@@ -174,26 +175,31 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
         var max_heap = MaxHeap[PairDist](nb_to_connect)
 
         for i in range(nb_pts):
-            ref p0 = points[i]
+            ref p_i = points[i]
             for j in range(i + 1, nb_pts):
-                ref p1 = points[j]
+                ref p_j = points[j]
 
-                var dx = p0.x - p1.x
+                var dx = p_i.x - p_j.x
                 var dx2 = dx * dx
+
+                var current_max_dist = max_heap.top().dist
 
                 if (
                     len(max_heap) == nb_to_connect
-                    and dx2 >= max_heap.top().dist
+                    and dx2 >= current_max_dist
                 ):
                     break
 
-                var dist = dx2 + (p0.y - p1.y) ** 2 + (p0.z - p1.z) ** 2
+                var dy = p_i.y - p_j.y
+                var dz = p_i.z - p_j.z
+
+                var dist = dx2 + dy * dy + dz * dz
 
                 if len(max_heap) < nb_to_connect:
-                    max_heap.push(PairDist(dist, p0.id, p1.id))
+                    max_heap.push(PairDist(dist, p_i.id, p_j.id))
 
                 elif dist < max_heap.top().dist:
-                    max_heap.replace_root(PairDist(dist, p0.id, p1.id))
+                    max_heap.replace_root(PairDist(dist, p_i.id, p_j.id))
 
         var dsu = DisjointSetUnion(nb_pts)
 
@@ -209,28 +215,44 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
 
     else:
         var nb_pts = len(points)
-        var dists = List[PairDist](capacity=nb_pts * nb_pts // 2)
-        for i in range(nb_pts):
-            for j in range(i + 1, nb_pts):
-                var dist = l2_squared(points[i], points[j])
-                dists.append(PairDist(dist, i, j))
-        sort(dists)
 
-        var dsu = DisjointSetUnion(nb_pts)
-        var circuits_remaining = nb_pts
+        var min_dist = [max_finite[DType.int64]() for _ in range(nb_pts)]
+        var parent = [Int64(-1) for _ in range(nb_pts)]
+        var visited = [False for _ in range(nb_pts)]
 
-        for pair in dists:
-            var root_0 = dsu.find(pair.id_0)
-            var root_1 = dsu.find(pair.id_1)
+        min_dist[0] = 0
 
-            if root_0 != root_1:
-                dsu.union(pair.id_0, pair.id_1)
-                circuits_remaining -= 1
+        var max_dist_found: Int64 = -1
+        var last_u: Int64 = -1
+        var last_v: Int64 = -1
+        for _ in range(nb_pts):
+            # find unvisited node with smallest min_dist
+            var u = -1
+            for i in range(nb_pts):
+                if not visited[i]:
+                    if u == -1 or min_dist[i] < min_dist[u]:
+                        u = i
 
-                if circuits_remaining == 1:
-                    return points[pair.id_0].x * points[pair.id_1].x
+            visited[u] = True
 
-        raise Error("part 2 - oops")
+            # track "last edge"
+            if parent[u] != -1:
+                var d = min_dist[u]
+                if d > max_dist_found:
+                    max_dist_found = d
+                    last_u = parent[u]
+                    last_v = u
+
+            # update distances to neighbors
+            for v in range(nb_pts):
+                if not visited[v]:
+                    var d2 = Int64(l2_squared(points[u], points[v]))
+
+                    if d2 < min_dist[v]:
+                        min_dist[v] = d2
+                        parent[v] = u
+
+        return points[last_u].x * points[last_v].x
 
 
 fn main() raises:
