@@ -419,16 +419,16 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         var city_names = Dict[UInt64, String](
             power_of_two_initial_capacity=1024
         )
-        var file = open(file_path, "r")
-        var data = Span[mut=False](file.read_bytes())
+        with open(file_path, "r") as file:
+            var data = Span[mut=False](file.read_bytes())
 
-        process_chunk[simd_parsing=False](
-            data,
-            0,
-            len(data) - 1,
-            d,
-            city_names,
-        )
+            process_chunk[simd_parsing=False](
+                data,
+                0,
+                len(data) - 1,
+                d,
+                city_names,
+            )
         return format_output(d, city_names)
 
     elif version == 3:
@@ -436,24 +436,23 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         var city_names = Dict[UInt64, String](
             power_of_two_initial_capacity=1024
         )
-        var file = open(file_path, "r")
-        var data = Span[mut=False](file.read_bytes())
+        with open(file_path, "r") as file:
+            var data = Span[mut=False](file.read_bytes())
 
-        process_chunk(
-            data,
-            0,
-            len(data) - 1,
-            d,
-            city_names,
-        )
+            process_chunk(
+                data,
+                0,
+                len(data) - 1,
+                d,
+                city_names,
+            )
 
         return format_output(d, city_names)
 
     elif version == 4:
-        var file = open(file_path, "r")
-        var data = Span[mut=False](file.read_bytes())
-        file.close()
-        return process_parallel(data)
+        with open(file_path, "r") as file:
+            var data = Span[mut=False](file.read_bytes())
+            return process_parallel(data)
 
     elif version == 5:
         var mmap_file = MMap(file_path)
