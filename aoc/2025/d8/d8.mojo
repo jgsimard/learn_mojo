@@ -159,21 +159,19 @@ struct DisjointSetUnion:
 fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
     var points = List[Point]()
     with open(file_path, "r") as f:
-        var cur_id = 0
-        for line in f.read().split("\n"):
-            var parts = line.split(",")
-            var pt = Point(
-                atol(parts[0]), atol(parts[1]), atol(parts[2]), cur_id
-            )
-            cur_id += 1
-            points.append(pt^)
+        for i, line in enumerate(f.read().split("\n")):
+            var xyz = line.split(",")
+            var x = atol(xyz[0])
+            var y = atol(xyz[1])
+            var z = atol(xyz[2])
+            points.append(Point(x, y, z, i))
+    var nb_pts = len(points)
 
     @parameter
     if p == 1:
         sort(points)  # sort by x
-        var nb_pts = len(points)
+        
         var max_heap = MaxHeap[PairDist](nb_to_connect)
-
         for i in range(nb_pts):
             ref p_i = points[i]
             for j in range(i + 1, nb_pts):
@@ -198,7 +196,7 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
                 if len(max_heap) < nb_to_connect:
                     max_heap.push(PairDist(dist, p_i.id, p_j.id))
 
-                elif dist < max_heap.top().dist:
+                elif dist < current_max_dist:
                     max_heap.replace_root(PairDist(dist, p_i.id, p_j.id))
 
         var dsu = DisjointSetUnion(nb_pts)
@@ -214,8 +212,6 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
         return final_sizes[-1] * final_sizes[-2] * final_sizes[-3]
 
     else:
-        var nb_pts = len(points)
-
         var min_dist = [max_finite[DType.int64]() for _ in range(nb_pts)]
         var parent = [Int64(-1) for _ in range(nb_pts)]
         var visited = [False for _ in range(nb_pts)]
