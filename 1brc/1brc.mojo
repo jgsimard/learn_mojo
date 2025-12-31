@@ -21,21 +21,22 @@ struct MeasurementFloat(Copyable & Writable):
     fn update(mut self, val: Float64):
         self.min = min(val, self.min)
         self.max = max(val, self.max)
-        self.mean = (self.mean * self.n + val) / (self.n + 1.0)
         self.n += 1.0
+        self.mean += (val - self.mean) / self.n
+        
 
     fn __str__(self) -> String:
         var min = round(self.min, 1)
         var max = round(self.max, 1)
         var mean = round(self.mean, 1)
-        return String(min, "/", mean, "/", max)
+        return "{}/{}/{}".format(min, mean, max)
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
 
 
 @register_passable("trivial")
-struct MeasurementInt(Copyable & Writable):
+struct MeasurementInt(Copyable & Writable & Stringable & Representable):
     var min: Int
     var sum: Int
     var max: Int
@@ -65,7 +66,10 @@ struct MeasurementInt(Copyable & Writable):
         var min = round(Float32(self.min) / 10.0, 1)
         var max = round(Float32(self.max) / 10.0, 1)
         var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
-        return String(min, "/", mean, "/", max)
+        return "{}/{}/{}".format(min, mean, max)
+
+    fn __repr__(self) -> String:
+        return self.__str__()
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
@@ -94,7 +98,7 @@ fn format_output[M: Copyable & Writable](d: Dict[String, M]) raises -> String:
 
 
 fn format_output[
-    M: Copyable & Writable
+    M: Copyable & Writable & Stringable & Representable,
 ](
     final_dict: Dict[UInt64, M],
     city_names: Dict[UInt64, String],
@@ -108,23 +112,14 @@ fn format_output[
     for i in range(len(cities)):
         var city = cities[i]
         var city_bytes = city.as_bytes()
-        var hash_city = fast_hash(city_bytes.unsafe_ptr(), len(city_bytes))
+        var hash_city = hash(city_bytes.unsafe_ptr(), len(city_bytes))
         ref measurement = final_dict[hash_city]
         if i > 0:
             result += ", \n"
-        result += city + "=" + String(measurement)
+        result += "{}={}".format(city,measurement)
 
     result += "}"
     return result
-
-
-# process_chunk
-fn fast_hash(data: UnsafePointer[UInt8], length: Int) -> UInt64:
-    # Simple inline hash - no string allocation!
-    var h: UInt64 = 0
-    for i in range(length):
-        h = h * 31 + UInt64(data[i])
-    return h
 
 
 fn process_chunk[
@@ -173,7 +168,7 @@ fn process_chunk[
                     semicolons & search_mask
                 )
                 var city_len = pos + Int(semicolon_idx) - line_start
-                var hash_city = fast_hash(data_ptr + line_start, city_len)
+                var hash_city = hash(data_ptr + line_start, city_len)
 
                 # parse value
                 comptime vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
@@ -249,7 +244,7 @@ fn process_chunk[
             var city = station[0]
             var val = atol(station[1].replace(".", ""))
 
-            var hash_city = fast_hash(city.unsafe_ptr(), len(city))
+            var hash_city = hash(city.unsafe_ptr(), len(city))
 
             if hash_city in d:
                 d[hash_city].update(val)
@@ -458,7 +453,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         var mmap_file = MMap(file_path)
         var data = mmap_file.as_span()
         return process_parallel(data)
-
+    
     else:
         raise "unsuported version"
 
@@ -477,12 +472,13 @@ fn main() raises:
         var result = process_1brc[v](file_path)
         var result_hash = hash(result)
 
+        with open("output/v{}.txt".format(v), "w") as f:
+            f.write(result)
+
         assert_equal(result_hash, hash_1M)
         # assert_equal(result_hash, hash_100M)
 
-        var filename = String("output/v", v, ".txt")
-        with open(filename, "w") as f:
-            f.write(result)
+        
 
     test[0]()
     test[1]()
@@ -507,7 +503,7 @@ fn main() raises:
             var prev_speedup = round(prev_time.value() / time_ms, 1)
             var base_speedup = round(base_time.value() / time_ms, 1)
             print(
-                "v{} : {} ms, {} X prev, , {} X base".format(
+                "v{} : {} ms, {} X prev, {} X base".format(
                     v, time_ms, prev_speedup, base_speedup
                 )
             )
