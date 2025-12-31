@@ -23,7 +23,6 @@ struct MeasurementFloat(Copyable & Writable):
         self.max = max(val, self.max)
         self.n += 1.0
         self.mean += (val - self.mean) / self.n
-        
 
     fn __str__(self) -> String:
         var min = round(self.min, 1)
@@ -116,7 +115,7 @@ fn format_output[
         ref measurement = final_dict[hash_city]
         if i > 0:
             result += ", \n"
-        result += "{}={}".format(city,measurement)
+        result += "{}={}".format(city, measurement)
 
     result += "}"
     return result
@@ -453,7 +452,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         var mmap_file = MMap(file_path)
         var data = mmap_file.as_span()
         return process_parallel(data)
-    
+
     else:
         raise "unsuported version"
 
@@ -477,8 +476,6 @@ fn main() raises:
 
         assert_equal(result_hash, hash_1M)
         # assert_equal(result_hash, hash_100M)
-
-        
 
     test[0]()
     test[1]()
