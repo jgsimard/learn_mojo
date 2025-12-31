@@ -464,7 +464,7 @@ fn main() raises:
 
     print("1BRC Unified Implementation")
     print("Cores:", num_physical_cores())
-    print()
+    print("Testing...")
 
     @parameter
     fn test[v: Int]() raises:
@@ -476,6 +476,8 @@ fn main() raises:
 
         assert_equal(result_hash, hash_1M)
         # assert_equal(result_hash, hash_100M)
+
+        print("v{} : correct hash".format(v))
 
     test[0]()
     test[1]()
