@@ -74,61 +74,38 @@ struct MeasurementInt(Copyable & Writable & Stringable & Representable):
         writer.write(self.__str__())
 
 
-# format_output
 fn format_output[M: Copyable & Writable](d: Dict[String, M]) raises -> String:
     """
     Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
     Cities are sorted alphabetically.
     """
-    var cities = List[String]()
-    for entry in d.items():
-        cities.append(entry.key)
+    var cities = [entry.key + "=" + String(entry.value) for entry in d.items()]
     sort(cities)
-
-    var result = String("{")
-    for i in range(len(cities)):
-        var city = cities[i]
-        ref measurement = d[city]
-        if i > 0:
-            result += ", \n"
-        result += city + "=" + String(measurement)
-    result += "}"
-    return result
+    return "{" + ", \n".join(cities) + "}"
 
 
 fn format_output[
     M: Copyable & Writable & Stringable & Representable,
 ](
-    final_dict: Dict[UInt64, M],
-    city_names: Dict[UInt64, String],
+    d: Dict[UInt64, M],
+    city_names: Dict[UInt64, StringSlice[ImmutAnyOrigin]],
 ) raises -> String:
-    var cities = List[String]()
-    for entry in city_names.items():
-        cities.append(entry.value)
+    var cities = [
+        "{}={}".format(entry.value, d[entry.key])
+        for entry in city_names.items()
+    ]
     sort(cities)
-
-    var result = String("{")
-    for i in range(len(cities)):
-        var city = cities[i]
-        var city_bytes = city.as_bytes()
-        var hash_city = hash(city_bytes.unsafe_ptr(), len(city_bytes))
-        ref measurement = final_dict[hash_city]
-        if i > 0:
-            result += ", \n"
-        result += "{}={}".format(city, measurement)
-
-    result += "}"
-    return result
+    return "{" + ", \n".join(cities) + "}"
 
 
 fn process_chunk[
     temp_alg: String = "v5", simd_parsing: Bool = True
 ](
-    data: Span[UInt8],
+    data: Span[UInt8, ImmutAnyOrigin],
     start: Int,
     end: Int,
     mut d: Dict[UInt64, MeasurementInt],
-    mut city_names: Dict[UInt64, String],
+    mut city_names: Dict[UInt64, StringSlice[ImmutAnyOrigin]],
 ) raises -> None:
     var pos = start
 
@@ -219,12 +196,12 @@ fn process_chunk[
                 else:
                     raise "unsuported version"
 
-                if hash_city in d:
+                try:
                     d[hash_city].update(val)
-                else:
+                except:
                     d[hash_city] = MeasurementInt(val)
-                    city_names[hash_city] = String(
-                        bytes=data[line_start : pos + Int(semicolon_idx)]
+                    city_names[hash_city] = StringSlice(
+                        from_utf8=data[line_start : pos + Int(semicolon_idx)]
                     )
 
                 start_of_line_idx = Int(newline_idx) + 1
@@ -245,11 +222,11 @@ fn process_chunk[
 
             var hash_city = hash(city.unsafe_ptr(), len(city))
 
-            if hash_city in d:
+            try:
                 d[hash_city].update(val)
-            else:
+            except:
                 d[hash_city] = MeasurementInt(val)
-                city_names[hash_city] = String(city)
+                city_names[hash_city] = city
 
 
 # parallel
@@ -261,7 +238,7 @@ fn find_next_newline(data: Span[UInt8], start: Int) -> Int:
     return len(data)
 
 
-fn process_parallel(data: Span[UInt8]) raises -> String:
+fn process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
     var num_workers = num_physical_cores()
 
     # Calculate aligned chunk boundaries
@@ -283,7 +260,7 @@ fn process_parallel(data: Span[UInt8]) raises -> String:
     var thread_dicts = List[Dict[UInt64, MeasurementInt]](
         length=num_workers, fill={}
     )
-    var thread_city_names = List[Dict[UInt64, String]](
+    var thread_city_names = List[Dict[UInt64, StringSlice[ImmutAnyOrigin]]](
         length=num_workers, fill={}
     )
 
@@ -410,11 +387,11 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
 
     elif version == 2:
         var d = Dict[UInt64, MeasurementInt](power_of_two_initial_capacity=1024)
-        var city_names = Dict[UInt64, String](
+        var city_names = Dict[UInt64, StringSlice[ImmutAnyOrigin]](
             power_of_two_initial_capacity=1024
         )
         with open(file_path, "r") as file:
-            var data = Span[mut=False](file.read_bytes())
+            var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
 
             process_chunk[simd_parsing=False](
                 data,
@@ -427,11 +404,11 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
 
     elif version == 3:
         var d = Dict[UInt64, MeasurementInt](power_of_two_initial_capacity=1024)
-        var city_names = Dict[UInt64, String](
+        var city_names = Dict[UInt64, StringSlice[ImmutAnyOrigin]](
             power_of_two_initial_capacity=1024
         )
         with open(file_path, "r") as file:
-            var data = Span[mut=False](file.read_bytes())
+            var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
 
             process_chunk(
                 data,
@@ -445,7 +422,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
 
     elif version == 4:
         with open(file_path, "r") as file:
-            var data = Span[mut=False](file.read_bytes())
+            var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
             return process_parallel(data)
 
     elif version == 5:
