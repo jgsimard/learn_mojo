@@ -3,7 +3,7 @@ from benchmark import run, Unit
 from memory import memset_zero
 from utils.numerics import max_finite
 
-from aoc.aoc_utils import input_paths
+from aoc.aoc_utils import input_paths, basic_bench
 
 
 @register_passable
@@ -170,7 +170,7 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
     @parameter
     if p == 1:
         sort(points)  # sort by x
-        
+
         var max_heap = MaxHeap[PairDist](nb_to_connect)
         for i in range(nb_pts):
             ref p_i = points[i]
@@ -182,10 +182,7 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
 
                 var current_max_dist = max_heap.top().dist
 
-                if (
-                    len(max_heap) == nb_to_connect
-                    and dx2 >= current_max_dist
-                ):
+                if len(max_heap) == nb_to_connect and dx2 >= current_max_dist:
                     break
 
                 var dy = p_i.y - p_j.y
@@ -262,14 +259,5 @@ fn main() raises:
     assert_equal(day8[2](test_file_path), 25272)
     print("part 2:", day8[2](file_path))
 
-    @parameter
-    fn bench[p: Int]() raises:
-        fn bench_fn() raises:
-            _ = day8[p](file_path)
-
-        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
-        time_us = round(time_us, 1)
-        print("part {}, t = {} us".format(p, time_us))
-
-    bench[1]()
-    bench[2]()
+    basic_bench[day8[nb_to_connect=1000], 1, file_path]()
+    basic_bench[day8[nb_to_connect=1000], 2, file_path]()

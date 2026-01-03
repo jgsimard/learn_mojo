@@ -51,7 +51,7 @@ fn day6[p: Int](file_path: String) raises -> Int:
 
                 total += val
         return total
-    
+
     else:
         var total = 0
         with open(file_path, "r") as f:
