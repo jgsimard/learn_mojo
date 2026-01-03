@@ -2,7 +2,7 @@ from testing import assert_equal
 from benchmark import run, Unit
 from memory import memset_zero
 
-from aoc.aoc_utils import input_paths
+from aoc.aoc_utils import input_paths, basic_bench
 
 
 fn day7[p: Int](file_path: String) raises -> Int:
@@ -46,14 +46,5 @@ fn main() raises:
     assert_equal(day7[2](test_file_path), 40)
     print("part 2:", day7[2](file_path))
 
-    @parameter
-    fn bench[p: Int]() raises:
-        fn bench_fn() raises:
-            _ = day7[p](file_path)
-
-        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
-        time_us = round(time_us, 1)
-        print("part {}, t = {} us".format(p, time_us))
-
-    bench[1]()
-    bench[2]()
+    basic_bench[day7, 1, file_path]()
+    basic_bench[day7, 2, file_path]()

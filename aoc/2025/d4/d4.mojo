@@ -2,7 +2,7 @@ from testing import assert_equal
 from benchmark import run, Unit
 from itertools import product
 
-from aoc.aoc_utils import sum_file, input_paths
+from aoc.aoc_utils import sum_file, input_paths, basic_bench
 
 
 struct Grid(Copyable):
@@ -88,14 +88,5 @@ fn main() raises:
     assert_equal(day4[2](test_file_path), 43)
     print("part 2: ", day4[2](file_path))
 
-    @parameter
-    fn bench[part: Int]() raises:
-        fn bench_fn() raises:
-            _ = day4[part](file_path)
-
-        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
-        time_us = round(time_us, 1)
-        print("part {}, t = {} us".format(part, time_us))
-
-    bench[1]()
-    bench[2]()
+    basic_bench[day4, 1, file_path]()
+    basic_bench[day4, 2, file_path]()

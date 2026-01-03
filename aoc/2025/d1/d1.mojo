@@ -1,48 +1,48 @@
 from testing import assert_equal
 from benchmark import run, Unit
-from aoc.aoc_utils import input_paths
+from aoc.aoc_utils import input_paths, basic_bench
 
 
-fn part_1(file_path: String) raises -> Int:
-    var pos = 50
-    var n_zero = 0
-    with open(file_path, "r") as f:
-        for line in f.read().split("\n"):
-            if len(line) == 0:
-                continue
-            var dir_letter = line.as_bytes()[0]
-            var mag = atol(line[1:])
-            var dir = -1 if dir_letter == ord("L") else 1
-            pos = (pos + dir * mag) % 100
-            if pos == 0:
-                n_zero += 1
-    return n_zero
+fn day1[p: Int](file_path: String) raises -> Int:
+    if p == 1:
+        var pos = 50
+        var n_zero = 0
+        with open(file_path, "r") as f:
+            for line in f.read().split("\n"):
+                if len(line) == 0:
+                    continue
+                var dir_letter = line.as_bytes()[0]
+                var mag = atol(line[1:])
+                var dir = -1 if dir_letter == ord("L") else 1
+                pos = (pos + dir * mag) % 100
+                if pos == 0:
+                    n_zero += 1
+        return n_zero
 
+    else:
+        var pos = 50
+        var n_zero = 0
+        with open(file_path, "r") as f:
+            for line in f.read().split("\n"):
+                if len(line) == 0:
+                    continue
+                var dir_letter = line.as_bytes()[0]
+                var mag = atol(line[1:])
+                var dir = -1 if dir_letter == ord("L") else 1
+                n_zero_free = mag // 100
+                n_zero += n_zero_free
 
-fn part_2(file_path: String) raises -> Int:
-    var pos = 50
-    var n_zero = 0
-    with open(file_path, "r") as f:
-        for line in f.read().split("\n"):
-            if len(line) == 0:
-                continue
-            var dir_letter = line.as_bytes()[0]
-            var mag = atol(line[1:])
-            var dir = -1 if dir_letter == ord("L") else 1
-            n_zero_free = mag // 100
-            n_zero += n_zero_free
+                mag -= 100 * n_zero_free
 
-            mag -= 100 * n_zero_free
+                if (dir == -1 and mag > pos and pos != 0) or (
+                    dir == 1 and mag + pos > 100
+                ):
+                    n_zero += 1
 
-            if (dir == -1 and mag > pos and pos != 0) or (
-                dir == 1 and mag + pos > 100
-            ):
-                n_zero += 1
-
-            pos = (pos + dir * mag) % 100
-            if pos == 0:
-                n_zero += 1
-    return n_zero
+                pos = (pos + dir * mag) % 100
+                if pos == 0:
+                    n_zero += 1
+        return n_zero
 
 
 fn main() raises:
@@ -50,24 +50,11 @@ fn main() raises:
 
     print("AoC 2025 - Day 1")
 
-    assert_equal(part_1(test_file_path), 3)
-    print("part 1: ", part_1(file_path))
+    assert_equal(day1[1](test_file_path), 3)
+    print("part 1: ", day1[1](file_path))
 
-    assert_equal(part_2(test_file_path), 6)
-    print("part 2: ", part_2(file_path))
+    assert_equal(day1[2](test_file_path), 6)
+    print("part 2: ", day1[2](file_path))
 
-    @parameter
-    fn bench[part: Int]() raises:
-        fn bench_fn() raises:
-            @parameter
-            if part == 1:
-                _ = part_1(file_path)
-            else:
-                _ = part_2(file_path)
-
-        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
-        time_us = round(time_us, 1)
-        print("part {}, t = {} us".format(part, time_us))
-
-    bench[1]()
-    bench[2]()
+    basic_bench[day1, 1, file_path]()
+    basic_bench[day1, 2, file_path]()

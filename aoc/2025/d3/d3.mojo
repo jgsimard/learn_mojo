@@ -1,7 +1,7 @@
 from testing import assert_equal
 from benchmark import run, Unit
 
-from aoc.aoc_utils import sum_file, input_paths
+from aoc.aoc_utils import sum_file, input_paths, basic_bench, basic_bench
 
 
 fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
@@ -22,7 +22,7 @@ fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
     return (Int(max_val - 48), max_idx)
 
 
-fn day3[n: Int, parallel: Bool = False](file_path: String) raises -> Int:
+fn day3[n: Int](file_path: String) raises -> Int:
     fn process_line(line: StringSlice) raises -> Int:
         var bytes = line.as_bytes()
         var len = len(bytes)
@@ -38,7 +38,7 @@ fn day3[n: Int, parallel: Bool = False](file_path: String) raises -> Int:
             pos_min_next += p + 1
         return line_value
 
-    return sum_file[process_line, parallel](file_path)
+    return sum_file[process_line, parallel=True](file_path)
 
 
 fn main() raises:
@@ -52,17 +52,5 @@ fn main() raises:
     assert_equal(day3[12](test_file_path), 3121910778619)
     print("part 2: ", day3[12](file_path))
 
-    @parameter
-    fn bench[n: Int, parallel: Bool = False]() raises:
-        fn bench_fn() raises:
-            _ = day3[n, parallel](file_path)
-
-        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
-        time_us = round(time_us, 1)
-        print("n={}, t={} us".format(n, time_us))
-
-    # bench[2]()
-    # bench[12]()
-
-    bench[2, True]()
-    bench[12, True]()
+    basic_bench[day3, 2, file_path]()
+    basic_bench[day3, 12, file_path]()

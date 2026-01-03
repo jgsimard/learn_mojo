@@ -1,7 +1,7 @@
 from testing import assert_equal
 from benchmark import run, Unit
 
-from aoc.aoc_utils import input_paths
+from aoc.aoc_utils import input_paths, basic_bench
 
 
 @fieldwise_init
@@ -103,14 +103,5 @@ fn main() raises:
     assert_equal(day5[2](test_file_path), 14)
     print("part 2:", day5[2](file_path))
 
-    @parameter
-    fn bench[p: Int]() raises:
-        fn bench_fn() raises:
-            _ = day5[p](file_path)
-
-        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
-        time_us = round(time_us, 1)
-        print("part {}, t = {} us".format(p, time_us))
-
-    bench[1]()
-    bench[2]()
+    basic_bench[day5, 1, file_path]()
+    basic_bench[day5, 2, file_path]()
