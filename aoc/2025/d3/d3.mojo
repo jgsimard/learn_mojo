@@ -57,8 +57,8 @@ fn main() raises:
         fn bench_fn() raises:
             _ = day3[n, parallel](file_path)
 
-        var time_ns = run[bench_fn](max_iters=30).mean(Unit.ns)
-        var time_us = round(time_ns / 1000.0, 1)
+        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
+        time_us = round(time_us, 1)
         print("n={}, t={} us".format(n, time_us))
 
     # bench[2]()

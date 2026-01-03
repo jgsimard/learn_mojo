@@ -136,8 +136,8 @@ fn main() raises:
             else:
                 _ = part_2[parallel](file_path)
 
-        var time_ns = run[bench_fn](max_iters=30).mean(Unit.ns)
-        var time_us = round(time_ns / 1000.0, 1)
+        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
+        time_us = round(time_us, 1)
         print("part {}, v{} : {} us".format(part, v, time_us))
 
     # print("Sequential")

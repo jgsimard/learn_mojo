@@ -93,8 +93,8 @@ fn main() raises:
         fn bench_fn() raises:
             _ = day4[part](file_path)
 
-        var time_ns = run[bench_fn](max_iters=30).mean(Unit.ns)
-        var time_us = round(time_ns / 1000.0, 1)
+        var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
+        time_us = round(time_us, 1)
         print("part {}, t = {} us".format(part, time_us))
 
     bench[1]()
