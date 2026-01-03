@@ -13,25 +13,18 @@ fn day1[p: Int](file_path: String) raises -> Int:
         var dir = -1 if line.as_bytes()[0] == ord("L") else 1
         var mag = atol(line[1:])
 
-        if p == 1:
-            pos = (pos + dir * mag) % 100
-            if pos == 0:
-                n_zero += 1
-
-        else:
-            n_zero_free = mag // 100
-            n_zero += n_zero_free
-
-            mag -= 100 * n_zero_free
+        if p == 2:
+            n_zero += mag // 100
+            mag = mag % 100
 
             if (dir == -1 and mag > pos and pos != 0) or (
                 dir == 1 and mag + pos > 100
             ):
                 n_zero += 1
 
-            pos = (pos + dir * mag) % 100
-            if pos == 0:
-                n_zero += 1
+        pos = (pos + dir * mag) % 100
+        if pos == 0:
+            n_zero += 1
 
     return n_zero
 
