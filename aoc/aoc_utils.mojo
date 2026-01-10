@@ -4,10 +4,12 @@ from benchmark import run, Unit
 
 comptime aoc_2025_base_path = "/home/jgs/mojo/learn_mojo/aoc/2025"
 
+
 fn input_paths[day: Int]() -> Tuple[String, String]:
-    var test_file_path = aoc_2025_base_path + "/d" + String(day) + "/test_input.txt"
-    var file_path = aoc_2025_base_path + "/d" + String(day) + "/input.txt"
+    var test_file_path = "{}/d{}/test_input.txt".format(aoc_2025_base_path, day)
+    var file_path = "{}/d{}/input.txt".format(aoc_2025_base_path, day)
     return (test_file_path, file_path)
+
 
 fn sum_file[
     process_fn: fn (StringSlice) raises -> Int,
@@ -43,10 +45,13 @@ fn sum_file[
             total += process_fn(line)
         return total
 
-fn basic_bench[func: fn[Int](String) raises -> Int, p: Int, file_path: String]() raises:
+
+fn basic_bench[
+    func: fn[Int] (String) raises -> Int, p: Int, file_path: String
+]() raises:
     fn bench_fn() raises:
         _ = func[p](file_path)
 
-    var time_us = run[bench_fn](max_iters=30).mean(Unit.us)
+    var time_us = run[func1=bench_fn](max_iters=30).mean(Unit.us)
     time_us = round(time_us, 1)
     print("part {}, t = {} us".format(p, time_us))

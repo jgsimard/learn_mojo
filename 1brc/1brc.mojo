@@ -9,14 +9,25 @@ from testing import assert_equal
 import os
 
 
-# Measurement struct
+# parametrized trait would be nice
+trait Measurement(Copyable & Stringable & Representable):
+    fn __repr__(self) -> String:
+        return self.__str__()
+
+
 @fieldwise_init
 @register_passable("trivial")
-struct MeasurementFloat(Copyable & Writable):
+struct MeasurementFloat(Measurement):
     var min: Float64
     var mean: Float64
     var max: Float64
     var n: Float64
+
+    fn __init__(out self, val: Float64):
+        self.min = val
+        self.max = val
+        self.mean = val
+        self.n = 1.0
 
     fn update(mut self, val: Float64):
         self.min = min(val, self.min)
@@ -30,12 +41,9 @@ struct MeasurementFloat(Copyable & Writable):
         var mean = round(self.mean, 1)
         return "{}/{}/{}".format(min, mean, max)
 
-    fn write_to(self, mut writer: Some[Writer]):
-        writer.write(self.__str__())
-
 
 @register_passable("trivial")
-struct MeasurementInt(Copyable & Writable & Stringable & Representable):
+struct MeasurementInt(Measurement):
     var min: Int
     var sum: Int
     var max: Int
@@ -67,25 +75,15 @@ struct MeasurementInt(Copyable & Writable & Stringable & Representable):
         var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
         return "{}/{}/{}".format(min, mean, max)
 
-    fn __repr__(self) -> String:
-        return self.__str__()
 
-    fn write_to(self, mut writer: Some[Writer]):
-        writer.write(self.__str__())
-
-
-fn format_output[M: Copyable & Writable](d: Dict[String, M]) raises -> String:
-    """
-    Format the results in the expected 1BRC format: {city1=min/mean/max, city2=min/mean/max, ...}
-    Cities are sorted alphabetically.
-    """
-    var cities = [entry.key + "=" + String(entry.value) for entry in d.items()]
+fn format_output[M: Measurement](d: Dict[String, M]) raises -> String:
+    var cities = ["{}={}".format(entry.key, entry.value) for entry in d.items()]
     sort(cities)
     return "{" + ", \n".join(cities) + "}"
 
 
 fn format_output[
-    M: Copyable & Writable & Stringable & Representable,
+    M: Measurement
 ](
     d: Dict[UInt64, M],
     city_names: Dict[UInt64, StringSlice[ImmutAnyOrigin]],
@@ -206,7 +204,7 @@ fn process_chunk[
 
                 start_of_line_idx = Int(newline_idx) + 1
                 line_start = pos + start_of_line_idx
-                newlines &= ~(1 << newline_idx)
+                newlines &= newlines - 1
 
             pos += start_of_line_idx
 
@@ -366,7 +364,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
                 if city in d:
                     d[city].update(val)
                 else:
-                    d[city] = MeasurementFloat(val, val, val, 1.0)
+                    d[city] = MeasurementFloat(val)
         return format_output(d)
 
     elif version == 1:
@@ -474,7 +472,7 @@ fn main() raises:
         fn bench_fn() raises:
             _ = process_1brc[v](file_path)
 
-        var time_ms = round(run[bench_fn](max_iters=10).mean(Unit.ms), 1)
+        var time_ms = round(run[func1=bench_fn](max_iters=10).mean(Unit.ms), 1)
         if base_time and prev_time:
             var prev_speedup = round(prev_time.value() / time_ms, 1)
             var base_speedup = round(base_time.value() / time_ms, 1)
