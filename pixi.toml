@@ -11,9 +11,9 @@ aoc25 = "python -c \"import os, sys; [sys.exit(1) for i in range(1, 13) if os.sy
 
 [dependencies]
 python = ">=3.14.2,<3.15"
-numpy = ">=2.3.5,<3"
+numpy = ">=2.4.0,<3"
 polars = ">=1.36.1,<2"
 tqdm = ">=4.67.1,<5"
-mojo = ">=0.26.1.0.dev2025122017,<0.27"
-pillow = ">=12.0.0,<13"
-max = ">=26.1.0.dev2025122017,<27"
+mojo = ">=0.26.1.0.dev2026011005,<0.27"
+pillow = ">=12.1.0,<13"
+max = ">=26.1.0.dev2026011005,<27"
