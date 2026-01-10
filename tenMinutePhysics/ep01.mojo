@@ -94,6 +94,6 @@ fn main() raises:
 
         pg.display.flip()
 
-        clock.tick(600)  # 60 FPS
+        clock.tick(60)  # 60 FPS
 
     pg.quit()
