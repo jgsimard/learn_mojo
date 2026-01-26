@@ -15,12 +15,46 @@ struct MojoClap[T: Defaultable & Movable]:
     fn parse() raises -> Self.T:
         __comptime_assert is_struct_type[Self.T]()
 
+        # types
         comptime bool = get_type_name[Bool]()
+        comptime str = get_type_name[String]()
+
+        # index
         comptime int = get_type_name[Int]()
+        comptime uint = get_type_name[UInt]()
+
+        # ints
         comptime i8 = get_type_name[Int8]()
+        comptime i16 = get_type_name[Int16]()
+        comptime i32 = get_type_name[Int32]()
+        comptime i64 = get_type_name[Int64]()
+
+        comptime u8 = get_type_name[UInt8]()
+        comptime u16 = get_type_name[UInt16]()
+        comptime u32 = get_type_name[UInt32]()
+        comptime u64 = get_type_name[UInt64]()
+
+        comptime ints = {
+            i8: DType.int8,
+            i16: DType.int16,
+            i32: DType.int32,
+            i64: DType.int64,
+            u8: DType.uint8,
+            u16: DType.uint16,
+            u32: DType.uint32,
+            u64: DType.uint64,
+        }
+
+        # floats
+        comptime f16 = get_type_name[Float16]()
         comptime f32 = get_type_name[Float32]()
         comptime f64 = get_type_name[Float64]()
-        comptime str = get_type_name[String]()
+
+        comptime floats = {
+            f16: DType.float16,
+            f32: DType.float32,
+            f64: DType.float64,
+        }
 
         var args = argv()
         var instance = Self.T()
@@ -69,35 +103,31 @@ struct MojoClap[T: Defaultable & Movable]:
                             )
 
                         @parameter
-                        if field_type_name == int:
-                            var value = atol(arg)
-                            field = rebind[type_of(field)](value)
-                        elif field_type_name == i8:
-                            var raw_value = atol(arg)
-                            comptime min = Int(min_finite[DType.int8]())
-                            comptime max = Int(max_finite[DType.int8]())
-                            if not min <= raw_value <= max:
-                                raise Error(
-                                    "value {} for field '{}' of type {}"
-                                    " is out of bounds [{}, {}]".format(
-                                        raw_value,
-                                        field_name,
-                                        field_type_name,
-                                        min,
-                                        max,
-                                    )
-                                )
-                            var value = Int8(raw_value)
-                            field = rebind[type_of(field)](value)
-                        elif field_type_name == f32:
-                            var value = Float32(atof(arg))
-                            field = rebind[type_of(field)](value)
-                        elif field_type_name == f64:
-                            var value = atof(arg)
-                            field = rebind[type_of(field)](value)
-                        elif field_type_name == str:
+                        if field_type_name == str:
                             var value = String(arg)
                             field = rebind[type_of(field)](value)
+
+                        # index types
+                        elif field_type_name == int:
+                            field = rebind[type_of(field)](atol(arg))
+
+                        elif field_type_name == uint:
+                            field = rebind[type_of(field)](UInt(atol(arg)))
+
+                        # ints
+                        elif field_type_name in ints:
+                            comptime dtype = ints.get(field_type_name).value()
+                            field = rebind[type_of(field)](
+                                Self._parse_int[dtype](arg, field_name)
+                            )
+
+                        # floats
+                        elif field_type_name in floats:
+                            comptime dtype = floats.get(field_type_name).value()
+                            field = rebind[type_of(field)](
+                                Self._parse_float[dtype](arg, field_name)
+                            )
+
                         else:
                             raise Error(
                                 "Cannot parse CLI value for unknown"
@@ -108,6 +138,40 @@ struct MojoClap[T: Defaultable & Movable]:
             i += 1
 
         return instance^
+
+    @staticmethod
+    fn _parse_int[
+        type: DType
+    ](val: StringSlice[StaticConstantOrigin], name: String) raises -> Scalar[
+        type
+    ]:
+        var raw = Int128(atol(val))
+        comptime min = Int128(min_finite[type]())
+        comptime max = Int128(max_finite[type]())
+        if not min <= raw <= max:
+            raise Error(
+                "Value {} for --{}  is out of bounds for {} : [{}, {}]".format(
+                    val, name, type, min, max
+                )
+            )
+        return Scalar[type](raw)
+
+    @staticmethod
+    fn _parse_float[
+        type: DType
+    ](val: StringSlice[StaticConstantOrigin], name: String) raises -> Scalar[
+        type
+    ]:
+        var raw = atof(val)
+        comptime min = Float64(min_finite[type]())
+        comptime max = Float64(max_finite[type]())
+        if not min <= raw <= max:
+            raise Error(
+                "Value {} for --{}  is out of bounds for {} : [{}, {}]".format(
+                    val, name, type, min, max
+                )
+            )
+        return Scalar[type](raw)
 
     @staticmethod
     fn print_help():
@@ -134,6 +198,7 @@ struct Config(Copyable, Defaultable, Writable):
     var threshold: Float64
     var limit: Float32
     var hello: Int8
+    var u: UInt8
 
     fn __init__(out self):
         self.name = "default"
@@ -142,6 +207,7 @@ struct Config(Copyable, Defaultable, Writable):
         self.threshold = 0.5
         self.limit = 0.1
         self.hello = 12
+        self.u = 10
 
 
 fn main() raises:
