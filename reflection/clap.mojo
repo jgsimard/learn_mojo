@@ -104,8 +104,7 @@ struct MojoClap[T: Defaultable & Movable]:
 
                         @parameter
                         if field_type_name == str:
-                            var value = String(arg)
-                            field = rebind[type_of(field)](value)
+                            field = rebind[type_of(field)](String(arg))
 
                         # index types
                         elif field_type_name == int:
