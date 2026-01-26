@@ -179,11 +179,7 @@ fn _print_help[T: Defaultable]():
     comptime field_types = struct_field_types[T]()
     comptime field_count = struct_field_count[T]()
 
-    # Instantiate the struct to access the values set in __init__
-    var instance = T()
-
-    # Used for boolean comparison "the same way" as cli_parse
-    comptime bool_type = get_type_name[Bool]()
+    var default = T()
 
     @parameter
     for i in range(field_count):
@@ -191,14 +187,12 @@ fn _print_help[T: Defaultable]():
         comptime field_type = field_types[i]
         comptime field_type_name = get_type_name[field_type]()
 
-        # Your original type name cleaning logic
         var tn: String = field_type_name
         if "SIMD" in field_type_name:
             tn = field_type_name[11:].split(",")[0]
             tn = tn.replace("f", "F").replace("u", "U").replace("i", "I")
 
-        # Get the default value via reference
-        ref val = __struct_field_ref(i, instance)
+        ref val = __struct_field_ref(i, default)
 
         var l = len(String(field_name))
         var pad_name = " " * (10 - l) if l < 10 else " "
