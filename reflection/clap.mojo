@@ -122,9 +122,10 @@ struct MojoClap[T: Defaultable & Movable]:
 
         comptime field_names = struct_field_names[Self.T]()
         comptime field_types = struct_field_types[Self.T]()
+        comptime field_count = struct_field_count[Self.T]()
 
         @parameter
-        for i in range(struct_field_count[Self.T]()):
+        for i in range(field_count):
             comptime field_name = field_names[i]
             comptime field_type = field_types[i]
             comptime field_type_name = get_type_name[field_type]()
