@@ -91,12 +91,12 @@ struct MojoClap[T: Defaultable & Movable]:
                         @parameter
                         if field_type_name == bool:
                             field = rebind[type_of(field)](True)
-                            continue
+                            break
 
-                        var arg: StringSlice[StaticConstantOrigin]
+                        var val: StringSlice[StaticConstantOrigin]
                         if i + 1 < len(args):
                             i += 1
-                            arg = args[i]
+                            val = args[i]
                         else:
                             raise Error(
                                 "Arg -- {} requires a value".format(arg_name)
@@ -104,34 +104,38 @@ struct MojoClap[T: Defaultable & Movable]:
 
                         @parameter
                         if field_type_name == str:
-                            field = rebind[type_of(field)](String(arg))
+                            field = rebind[type_of(field)](String(val))
+                            break
 
                         # index types
                         elif field_type_name == int:
-                            field = rebind[type_of(field)](atol(arg))
+                            field = rebind[type_of(field)](atol(val))
+                            break
 
                         elif field_type_name == uint:
-                            field = rebind[type_of(field)](UInt(atol(arg)))
-
+                            field = rebind[type_of(field)](UInt(atol(val)))
+                            break
                         # ints
                         elif field_type_name in ints:
                             comptime dtype = ints.get(field_type_name).value()
                             field = rebind[type_of(field)](
-                                Self._parse_int[dtype](arg, field_name)
+                                Self._parse_int[dtype](val, field_name)
                             )
+                            break
 
                         # floats
                         elif field_type_name in floats:
                             comptime dtype = floats.get(field_type_name).value()
                             field = rebind[type_of(field)](
-                                Self._parse_float[dtype](arg, field_name)
+                                Self._parse_float[dtype](val, field_name)
                             )
+                            break
 
                         else:
                             raise Error(
                                 "Cannot parse CLI value for unknown"
                                 " type: {}, value:{}".format(
-                                    field_type_name, arg
+                                    field_type_name, val
                                 )
                             )
             i += 1
