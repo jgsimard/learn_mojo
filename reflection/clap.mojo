@@ -25,13 +25,12 @@ struct MojoClap[T: Defaultable & Movable]:
         var args = argv()
         var instance = Self.T()
 
-        # Help check
+        # help
         for arg in args:
             if arg == "--help" or arg == "-h":
                 Self.print_help()
                 exit(0)
 
-        # Compile-time reflection metadata
         comptime field_count = struct_field_count[Self.T]()
         comptime field_names = struct_field_names[Self.T]()
         comptime field_types = struct_field_types[Self.T]()
@@ -42,7 +41,9 @@ struct MojoClap[T: Defaultable & Movable]:
 
             if arg.startswith("--"):
                 var arg_name = arg.strip("-")
-                var found = False
+
+                if arg_name not in materialize[field_names]():
+                    raise Error("Warning: Unknown arg --{}".format(arg_name))
 
                 @parameter
                 for idx in range(field_count):
@@ -51,66 +52,59 @@ struct MojoClap[T: Defaultable & Movable]:
                     comptime field_type_name = get_type_name[field_type]()
 
                     if arg_name == field_name:
-                        found = True
-                        print("found", arg_name)
-
                         ref field = __struct_field_ref(idx, instance)
 
                         @parameter
                         if field_type_name == bool:
                             field = rebind[type_of(field)](True)
-                        else:
-                            if i + 1 < len(args):
-                                i += 1
-                                var arg = args[i]
-                                print(arg)
+                            continue
 
-                                @parameter
-                                if field_type_name == int:
-                                    var value = atol(arg)
-                                    field = rebind[type_of(field)](value)
-                                elif field_type_name == i8:
-                                    var raw_value = atol(arg)
-                                    comptime min = Int(min_finite[DType.int8]())
-                                    comptime max = Int(max_finite[DType.int8]())
-                                    if not min <= raw_value <= max:
-                                        raise Error(
-                                            "value {} for field '{}' of type {}"
-                                            " is out of bounds [{}, {}]".format(
-                                                raw_value,
-                                                field_name,
-                                                field_type_name,
-                                                min,
-                                                max,
-                                            )
-                                        )
-                                    var value = Int8(raw_value)
-                                    field = rebind[type_of(field)](value)
-                                elif field_type_name == f32:
-                                    var value = Float32(atof(arg))
-                                    field = rebind[type_of(field)](value)
-                                elif field_type_name == f64:
-                                    var value = atof(arg)
-                                    field = rebind[type_of(field)](value)
-                                elif field_type_name == str:
-                                    var value = String(arg)
-                                    field = rebind[type_of(field)](value)
-                                else:
-                                    raise Error(
-                                        "Cannot parse CLI value for unknown"
-                                        " type: {}, value:{}".format(
-                                            field_type_name, arg
-                                        )
-                                    )
-                            else:
+                        var arg: StringSlice[StaticConstantOrigin]
+                        if i + 1 < len(args):
+                            i += 1
+                            arg = args[i]
+                        else:
+                            raise Error(
+                                "Arg -- {} requires a value".format(arg_name)
+                            )
+
+                        @parameter
+                        if field_type_name == int:
+                            var value = atol(arg)
+                            field = rebind[type_of(field)](value)
+                        elif field_type_name == i8:
+                            var raw_value = atol(arg)
+                            comptime min = Int(min_finite[DType.int8]())
+                            comptime max = Int(max_finite[DType.int8]())
+                            if not min <= raw_value <= max:
                                 raise Error(
-                                    "Arg -- {} requires a value".format(
-                                        arg_name
+                                    "value {} for field '{}' of type {}"
+                                    " is out of bounds [{}, {}]".format(
+                                        raw_value,
+                                        field_name,
+                                        field_type_name,
+                                        min,
+                                        max,
                                     )
                                 )
-
-                if not found:
-                    raise Error("Warning: Unknown arg --{}".format(arg_name))
+                            var value = Int8(raw_value)
+                            field = rebind[type_of(field)](value)
+                        elif field_type_name == f32:
+                            var value = Float32(atof(arg))
+                            field = rebind[type_of(field)](value)
+                        elif field_type_name == f64:
+                            var value = atof(arg)
+                            field = rebind[type_of(field)](value)
+                        elif field_type_name == str:
+                            var value = String(arg)
+                            field = rebind[type_of(field)](value)
+                        else:
+                            raise Error(
+                                "Cannot parse CLI value for unknown"
+                                " type: {}, value:{}".format(
+                                    field_type_name, arg
+                                )
+                            )
             i += 1
 
         return instance^
