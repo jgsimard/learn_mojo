@@ -10,13 +10,12 @@ import os
 
 
 # parametrized trait would be nice
-trait Measurement(Copyable & Stringable & Representable):
+trait Measurement(Copyable & Stringable & Representable & TrivialRegisterType):
     fn __repr__(self) -> String:
         return self.__str__()
 
 
 @fieldwise_init
-@register_passable("trivial")
 struct MeasurementFloat(Measurement):
     var min: Float64
     var mean: Float64
@@ -42,7 +41,6 @@ struct MeasurementFloat(Measurement):
         return "{}/{}/{}".format(min, mean, max)
 
 
-@register_passable("trivial")
 struct MeasurementInt(Measurement):
     var min: Int
     var sum: Int

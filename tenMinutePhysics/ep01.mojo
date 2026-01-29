@@ -68,8 +68,8 @@ fn main() raises:
                 running = False
 
         # scaling
-        var w = Float64(screen.get_width())
-        var h = Float64(screen.get_height())
+        var w = Float64(py=screen.get_width())
+        var h = Float64(py=screen.get_height())
 
         var scale = (
             w / state.sim_min_width if w < h else h / state.sim_min_width
@@ -81,7 +81,7 @@ fn main() raises:
         state.simulate(sim_width)
 
         # rendering
-        var color_white = Python.tuple(255, 255, 255) 
+        var color_white = Python.tuple(255, 255, 255)
         screen.fill(color_white)
 
         var px = state.ball.pos.x * scale
