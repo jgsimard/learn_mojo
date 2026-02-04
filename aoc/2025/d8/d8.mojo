@@ -65,7 +65,7 @@ struct MaxHeap[T: Comparable & Copyable](Sized):
     fn __len__(self) -> Int:
         return len(self.data)
 
-    fn top(self) -> ref [self.data] Self.T:
+    fn top(self) -> ref[self.data] Self.T:
         return self.data[0]
 
     fn push(mut self, var value: Self.T):

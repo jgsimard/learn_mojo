@@ -14,7 +14,7 @@ struct Grid(Copyable):
         self.h = h
         self.w = w
 
-    fn __getitem__(mut self, i: Int, j: Int) -> ref [self.data] Int:
+    fn __getitem__(mut self, i: Int, j: Int) -> ref[self.data] Int:
         return self.data[i * self.w + j]
 
 
