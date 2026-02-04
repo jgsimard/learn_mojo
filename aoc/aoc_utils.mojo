@@ -2,7 +2,7 @@ from algorithm import parallelize
 from os import Atomic
 from benchmark import run, Unit
 
-comptime aoc_2025_base_path = "/home/jgs/mojo/learn_mojo/aoc/2025"
+comptime aoc_2025_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc/2025"
 
 
 fn input_paths[day: Int]() -> Tuple[String, String]:
@@ -12,7 +12,7 @@ fn input_paths[day: Int]() -> Tuple[String, String]:
 
 
 fn sum_file[
-    process_fn: fn (StringSlice) raises -> Int,
+    process_fn: fn(StringSlice) raises -> Int,
     parallel: Bool,
     sep: String = "\n",
 ](file_path: String) raises -> Int:
@@ -47,7 +47,7 @@ fn sum_file[
 
 
 fn basic_bench[
-    func: fn[Int] (String) raises -> Int, p: Int, file_path: String
+    func: fn[Int](String) raises -> Int, p: Int, file_path: String
 ]() raises:
     fn bench_fn() raises:
         _ = func[p](file_path)

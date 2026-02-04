@@ -1,4 +1,4 @@
-from sys.ffi import external_call
+from ffi import external_call
 from sys.info import simd_width_of
 from memory import pack_bits
 from bit import count_leading_zeros, count_trailing_zeros
@@ -10,9 +10,7 @@ import os
 
 
 # parametrized trait would be nice
-trait Measurement(Copyable & Stringable & Representable & TrivialRegisterType):
-    fn __repr__(self) -> String:
-        return self.__str__()
+comptime Measurement = Copyable & Stringable & TrivialRegisterType & Writable
 
 
 @fieldwise_init
@@ -39,6 +37,9 @@ struct MeasurementFloat(Measurement):
         var max = round(self.max, 1)
         var mean = round(self.mean, 1)
         return "{}/{}/{}".format(min, mean, max)
+
+    fn write_to(self, mut writer: Some[Writer]):
+        writer.write(self.__str__())
 
 
 struct MeasurementInt(Measurement):
@@ -72,6 +73,9 @@ struct MeasurementInt(Measurement):
         var max = round(Float32(self.max) / 10.0, 1)
         var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
         return "{}/{}/{}".format(min, mean, max)
+
+    fn write_to(self, mut writer: Some[Writer]):
+        writer.write(self.__str__())
 
 
 fn format_output[M: Measurement](d: Dict[String, M]) raises -> String:
