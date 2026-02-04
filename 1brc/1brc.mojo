@@ -267,13 +267,11 @@ fn process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
     # Process chunks in parallel
     @parameter
     fn process_worker(worker_id: Int):
-        var start = chunk_starts[worker_id]
-        var end = chunk_ends[worker_id]
         try:
             process_chunk(
                 data,
-                start,
-                end,
+                chunk_starts[worker_id],
+                chunk_ends[worker_id],
                 thread_dicts[worker_id],
                 thread_city_names[worker_id],
             )
@@ -333,10 +331,7 @@ struct MMap:
             _ = external_call["munmap", Int](self._data, self._size)
 
     fn as_span(self) -> Span[UInt8, ImmutAnyOrigin]:
-        return Span(
-            ptr=self._data,
-            length=self._size,
-        )
+        return Span(ptr=self._data, length=self._size)
 
 
 fn process_1brc[version: Int](file_path: String) raises -> String:
@@ -394,11 +389,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
             var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
 
             process_chunk[simd_parsing=False](
-                data,
-                0,
-                len(data) - 1,
-                d,
-                city_names,
+                data, 0, len(data) - 1, d, city_names
             )
         return format_output(d, city_names)
 
@@ -409,14 +400,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         )
         with open(file_path, "r") as file:
             var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
-
-            process_chunk(
-                data,
-                0,
-                len(data) - 1,
-                d,
-                city_names,
-            )
+            process_chunk(data, 0, len(data) - 1, d, city_names)
 
         return format_output(d, city_names)
 
@@ -441,9 +425,9 @@ fn main() raises:
 
     print("1BRC Unified Implementation")
     print("Cores:", num_physical_cores())
+
     print("Testing...")
 
-    @parameter
     fn test[v: Int]() raises:
         var result = process_1brc[v](file_path)
         var result_hash = hash(result)
@@ -456,16 +440,12 @@ fn main() raises:
 
         print("v{} : correct hash".format(v))
 
-    test[0]()
-    test[1]()
-    test[2]()
-    test[3]()
-    test[4]()
-    test[5]()
+    @parameter
+    for version in [0, 1, 2, 3, 4, 5]:
+        test[version]()
 
     print("Benchmarking...")
 
-    @parameter
     fn bench[
         v: Int
     ](
