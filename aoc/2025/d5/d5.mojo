@@ -5,7 +5,7 @@ from aoc.aoc_utils import input_paths, basic_bench
 
 
 @fieldwise_init
-struct Range(Comparable, Copyable, Representable, Writable):
+struct Range(Comparable, Copyable, Writable):
     var min: Int
     var max: Int
 
@@ -14,15 +14,6 @@ struct Range(Comparable, Copyable, Representable, Writable):
 
     fn __lt__(self: Self, rhs: Self) -> Bool:
         return self.min < rhs.min
-
-    fn __eq__(self: Self, rhs: Self) -> Bool:
-        return self.min == rhs.min and self.max == rhs.max
-
-    fn __repr__(self) -> String:
-        return "{}-{}".format(self.min, self.max)
-
-    fn write_to(self, mut writer: Some[Writer]):
-        writer.write(self.__repr__())
 
 
 fn find_containing_range(ranges: List[Range], value: Int) -> Bool:

@@ -6,9 +6,8 @@ from utils.numerics import max_finite
 from aoc.aoc_utils import input_paths, basic_bench
 
 
-@register_passable
 @fieldwise_init
-struct Point(Comparable, Copyable, Representable, Writable):
+struct Point(Comparable, Copyable, RegisterPassable, Writable):
     var x: Int
     var y: Int
     var z: Int
@@ -17,43 +16,15 @@ struct Point(Comparable, Copyable, Representable, Writable):
     fn __lt__(self: Self, rhs: Self) -> Bool:
         return self.x < rhs.x
 
-    fn __eq__(self, rhs: Self) -> Bool:
-        return (
-            self.x == rhs.x
-            and self.y == rhs.y
-            and self.z == rhs.z
-            and self.id == rhs.id
-        )
 
-    fn __repr__(self) -> String:
-        return "id {} : ({},{},{})".format(self.id, self.x, self.y, self.z)
-
-    fn write_to(self, mut writer: Some[Writer]):
-        writer.write(self.__repr__())
-
-
-@register_passable
 @fieldwise_init
-struct PairDist(Comparable, Copyable, Representable, Writable):
+struct PairDist(Comparable, Copyable, RegisterPassable, Writable):
     var dist: Int
     var id_0: Int
     var id_1: Int
 
     fn __lt__(self: Self, rhs: Self) -> Bool:
         return self.dist < rhs.dist
-
-    fn __eq__(self: Self, rhs: Self) -> Bool:
-        return (
-            self.dist == rhs.dist
-            and self.id_0 == rhs.id_0
-            and self.id_1 == rhs.id_1
-        )
-
-    fn __repr__(self) -> String:
-        return "dist={} ({},{})".format(self.dist, self.id_0, self.id_1)
-
-    fn write_to(self, mut writer: Some[Writer]):
-        writer.write(self.__repr__())
 
 
 struct MaxHeap[T: Comparable & Copyable](Sized):

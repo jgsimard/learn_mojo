@@ -14,15 +14,15 @@ from math import (
     cosh,
     tanh,
     abs,
-    copysign
+    copysign,
 )
 
 
 @fieldwise_init
 struct Dual[dtype: DType where dtype.is_floating_point()](
-    Copyable, TrivialRegisterType, Writable
+    Copyable, TrivialRegisterPassable, Writable
 ):
-    """Dual numbers 
+    """Dual numbers
     based on https://20k.github.io/c++/2024/05/18/forward-backward-differentiation.html .
     """
 

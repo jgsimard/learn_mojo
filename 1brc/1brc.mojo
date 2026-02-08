@@ -10,7 +10,7 @@ import os
 
 
 # parametrized trait would be nice
-comptime Measurement = Copyable & Stringable & TrivialRegisterType & Writable
+comptime Measurement = Copyable & Stringable & TrivialRegisterPassable & Writable
 
 
 @fieldwise_init
