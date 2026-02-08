@@ -10,11 +10,11 @@ aoc25 = "python -c \"import os, sys; [sys.exit(1) for i in range(1, 13) if os.sy
 
 
 [dependencies]
-mojo = ">=0.26.2.0.dev2026020405,<0.27"
-max = ">=26.2.0.dev2026020405,<27"
-python = ">=3.13.11,<3.14"
+mojo = ">=0.26.2.0.dev2026020706,<0.27"
+max = ">=26.2.0.dev2026020706,<27"
+python = ">=3.13.12,<3.14"
 numpy = ">=2.4.2,<3"
-polars = ">=1.37.1,<2"
+polars = ">=1.38.1,<2"
 tqdm = ">=4.67.3,<5"
 pillow = ">=12.1.0,<13"
 pygame = ">=2.6.1,<3"
