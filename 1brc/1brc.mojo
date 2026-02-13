@@ -1,12 +1,11 @@
-from ffi import external_call
-from sys.info import simd_width_of
-from memory import pack_bits
-from bit import count_leading_zeros, count_trailing_zeros
 from algorithm import parallelize
-from sys import num_physical_cores
 from benchmark import run, Unit
+from bit import count_leading_zeros, count_trailing_zeros
+from ffi import external_call
+from memory import pack_bits
+from os import SEEK_END
+from sys import num_physical_cores, simd_width_of
 from testing import assert_equal
-import os
 
 
 # parametrized trait would be nice
@@ -114,11 +113,11 @@ fn process_chunk[
         comptime simd_width = simd_width_of[DType.uint8]()
         comptime bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
-        comptime SEMICOLON = ord(";")
-        comptime NEW_LINE = ord("\n")
-        comptime MINUS = ord("-")
-        comptime ZERO = ord("0")
-        comptime DOT = ord(".")
+        comptime SEMICOLON = UInt8(ord(";"))
+        comptime NEW_LINE = UInt8(ord("\n"))
+        comptime MINUS = UInt8(ord("-"))
+        comptime ZERO = UInt8(ord("0"))
+        comptime DOT = UInt8(ord("."))
 
         var data_ptr = data.unsafe_ptr()
         var line_start = pos
@@ -137,7 +136,9 @@ fn process_chunk[
 
             while newlines != 0:
                 var newline_idx = count_trailing_zeros(newlines)
-                var search_mask = (1 << newline_idx) - (1 << start_of_line_idx)
+                var search_mask = (1 << newline_idx) - Scalar[bits_type](
+                    1 << start_of_line_idx
+                )
 
                 # Parse city
                 var semicolon_idx = count_trailing_zeros(
@@ -150,11 +151,11 @@ fn process_chunk[
                 comptime vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
                 comptime vec_2d = SIMD[DType.int16, 4](10, 0, 1, 0)  # d.dX
 
-                var val_start_idx = pos + semicolon_idx + 1
+                var val_start_idx = Scalar[bits_type](pos) + semicolon_idx + 1
                 var num_len = newline_idx - (semicolon_idx + 1)
 
-                var is_neg = Int(data[val_start_idx] == MINUS)
-                var sign = 1 - (is_neg << 1)
+                var is_neg = Scalar[bits_type](data[val_start_idx] == MINUS)
+                var sign = Int(1 - (is_neg << 1))
 
                 var val_abs_start = val_start_idx + is_neg
 
@@ -170,14 +171,14 @@ fn process_chunk[
                     var digits = SIMD[DType.int16, 4](
                         data_ptr.load[width=4](val_abs_start) - ZERO
                     )
-                    var val_long = (digits * vec_3d).reduce_add()
-                    var val_short = (digits * vec_2d).reduce_add()
+                    var val_long = Int((digits * vec_3d).reduce_add())
+                    var val_short = Int((digits * vec_2d).reduce_add())
 
                     var is_short = Int((num_len - is_neg) == 3)  # d.d
                     var val_abs = val_short * is_short + val_long * (
                         1 - is_short
                     )
-                    val = Int(sign * val_abs)
+                    val = sign * val_abs
 
                 elif temp_alg == "v5":
                     comptime vec_digits = vec_3d.interleave(vec_2d)
@@ -190,9 +191,9 @@ fn process_chunk[
                     var digits_8 = digits_4.interleave(digits_4)
                     var vals = (digits_8 * vec_digits).reduce_add[2]()
 
-                    var is_short = Int((num_len - is_neg) == 3)  # d.d
+                    var is_short = Int16((num_len - is_neg) == 3)  # d.d
                     var val_abs = vals[0] * (1 - is_short) + vals[1] * is_short
-                    val = Int(sign * val_abs)
+                    val = sign * Int(val_abs)
                 else:
                     raise "unsuported version"
 
@@ -233,7 +234,7 @@ fn process_chunk[
 fn find_next_newline(data: Span[UInt8], start: Int) -> Int:
     """Find the next newline after start position."""
     for i in range(start, len(data)):
-        if data[i] == ord("\n"):
+        if data[i] == UInt8(ord("\n")):
             return i + 1  # Return position AFTER newline
     return len(data)
 
@@ -300,10 +301,14 @@ fn process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
     return format_output(final_dict, final_city_names)
 
 
-struct MMap:
+struct MMap[
+    mut: Bool,
+    //,
+    origin: Origin[mut=mut],
+]:
     """Memory Mapped File."""
 
-    comptime ptr = UnsafePointer[UInt8, ImmutAnyOrigin]
+    comptime ptr = UnsafePointer[UInt8, Self.origin]
     var _data: Self.ptr
     var _size: Int
 
@@ -312,7 +317,7 @@ struct MMap:
             comptime PROT_READ = 1
             comptime MAP_SHARED = 1
 
-            self._size = Int(file.seek(0, os.SEEK_END))
+            self._size = Int(file.seek(0, SEEK_END))
 
             self._data = external_call["mmap", Self.ptr](
                 Self.ptr(),  # addr (let kernel choose)
@@ -330,7 +335,7 @@ struct MMap:
         if self._data:
             _ = external_call["munmap", Int](self._data, self._size)
 
-    fn as_span(self) -> Span[UInt8, ImmutAnyOrigin]:
+    fn as_span(ref[Self.origin] self) -> Span[UInt8, Self.origin]:
         return Span(ptr=self._data, length=self._size)
 
 
@@ -381,9 +386,9 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         return format_output(d)
 
     elif version == 2:
-        var d = Dict[UInt64, MeasurementInt](power_of_two_initial_capacity=1024)
+        var d = Dict[UInt64, MeasurementInt](capacity=1024)
         var city_names = Dict[UInt64, StringSlice[ImmutAnyOrigin]](
-            power_of_two_initial_capacity=1024
+            capacity=1024
         )
         with open(file_path, "r") as file:
             var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
@@ -394,9 +399,9 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         return format_output(d, city_names)
 
     elif version == 3:
-        var d = Dict[UInt64, MeasurementInt](power_of_two_initial_capacity=1024)
+        var d = Dict[UInt64, MeasurementInt](capacity=1024)
         var city_names = Dict[UInt64, StringSlice[ImmutAnyOrigin]](
-            power_of_two_initial_capacity=1024
+            capacity=1024
         )
         with open(file_path, "r") as file:
             var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
@@ -410,7 +415,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
             return process_parallel(data)
 
     elif version == 5:
-        var mmap_file = MMap(file_path)
+        var mmap_file = MMap[origin=ImmutAnyOrigin](file_path)
         var data = mmap_file.as_span()
         return process_parallel(data)
 
@@ -440,9 +445,12 @@ fn main() raises:
 
         print("v{} : correct hash".format(v))
 
-    @parameter
-    for version in [0, 1, 2, 3, 4, 5]:
-        test[version]()
+    test[0]()
+    test[1]()
+    test[2]()
+    test[3]()
+    test[4]()
+    test[5]()
 
     print("Benchmarking...")
 
