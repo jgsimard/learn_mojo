@@ -15,7 +15,7 @@ fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
         if numbers[i] > max_val:
             max_val = numbers[i]
             max_idx = i
-            comptime nine = ord("9")
+            comptime nine = UInt8(ord("9"))
             if max_val == nine:
                 break
 

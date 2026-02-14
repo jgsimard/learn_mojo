@@ -31,7 +31,7 @@ fn day4[part: Int](file_path: String) raises -> Int:
             if len(line) == 0:
                 continue
             for j, e in enumerate(line.as_bytes()):
-                if e == ord("@"):
+                if e == UInt8(ord("@")):
                     grid[i + 1, j + 1] = 1
 
     var num = 0

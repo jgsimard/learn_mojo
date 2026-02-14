@@ -205,7 +205,7 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
                 if d > max_dist_found:
                     max_dist_found = d
                     last_u = parent[u]
-                    last_v = u
+                    last_v = Int64(u)
 
             # update distances to neighbors
             for v in range(nb_pts):
@@ -214,7 +214,7 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
 
                     if d2 < min_dist[v]:
                         min_dist[v] = d2
-                        parent[v] = u
+                        parent[v] = Int64(u)
 
         return points[last_u].x * points[last_v].x
 

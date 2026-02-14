@@ -31,7 +31,7 @@ fn sum_file[
                 var line = lines[idx]
                 if len(line) == 0:
                     return
-                _ = total.fetch_add(process_fn(line))
+                _ = total.fetch_add(Scalar[DType.int](process_fn(line)))
             except:
                 pass
 

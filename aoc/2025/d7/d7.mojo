@@ -13,7 +13,7 @@ fn day7[p: Int](file_path: String) raises -> Int:
 
         var current_origins = List[Int](length=len(lines[0]), fill=0)
         for i, e in enumerate(lines[0].as_bytes()):
-            if e == ord("S"):
+            if e == UInt8(ord("S")):
                 current_origins[i] = 1
                 break
         var next_origins = List[Int](length=len(current_origins), fill=0)
@@ -22,13 +22,13 @@ fn day7[p: Int](file_path: String) raises -> Int:
             memset_zero(next_origins.unsafe_ptr(), len(next_origins))
             for i, (e, o) in enumerate(zip(line.as_bytes(), current_origins)):
                 if o > 0:
-                    if e == ord("^"):
+                    if e == UInt8(ord("^")):
                         total_split += 1
                         total_world += o
                         # never at a border so no need to check
                         next_origins[i - 1] += o
                         next_origins[i + 1] += o
-                    elif e == ord("."):
+                    elif e == UInt8(ord(".")):
                         next_origins[i] += o
             swap(current_origins, next_origins)
 

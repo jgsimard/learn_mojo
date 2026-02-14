@@ -10,7 +10,7 @@ fn day1[p: Int](file_path: String) raises -> Int:
         if len(line) == 0:
             continue
 
-        var dir = -1 if line.as_bytes()[0] == ord("L") else 1
+        var dir = -1 if line.as_bytes()[0] == UInt8(ord("L")) else 1
         var mag = atol(line[1:])
 
         if p == 2:

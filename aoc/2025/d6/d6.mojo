@@ -64,10 +64,10 @@ fn day6[p: Int](file_path: String) raises -> Int:
             for i in range(nb_line_numbers):
                 for j, e in enumerate(content[i].as_bytes()):
                     var value: Int
-                    if e == ord(" "):
+                    if e == UInt8(ord(" ")):
                         value = -1
                     else:
-                        value = Int(e) - ord("0")
+                        value = Int(e) - Int(ord("0"))
                     grid[i, j] = value
 
             var values = List[Int](capacity=nb_char)
