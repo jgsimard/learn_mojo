@@ -84,7 +84,7 @@ fn day5[p: Int](file_path: String) raises -> Int:
 
 
 fn main() raises:
-    comptime test_file_path, file_path = input_paths[5]()
+    comptime test_file_path, file_path = input_paths[2025, 5]()
 
     print("\nAoC 2025 - Day 5")
 

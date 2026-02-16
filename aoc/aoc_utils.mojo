@@ -2,12 +2,12 @@ from algorithm import parallelize
 from os import Atomic
 from benchmark import run, Unit
 
-comptime aoc_2025_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc/2025"
+comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
 
 
-fn input_paths[day: Int]() -> Tuple[String, String]:
-    var test_file_path = "{}/d{}/test_input.txt".format(aoc_2025_base_path, day)
-    var file_path = "{}/d{}/input.txt".format(aoc_2025_base_path, day)
+fn input_paths[year: Int, day: Int]() -> Tuple[String, String]:
+    var test_file_path = "{}/{}/d{}/test_input.txt".format(aoc_base_path, year, day)
+    var file_path = "{}/{}/d{}/input.txt".format(aoc_base_path, year, day)
     return (test_file_path, file_path)
 
 

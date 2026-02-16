@@ -220,7 +220,7 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
 
 
 fn main() raises:
-    comptime test_file_path, file_path = input_paths[8]()
+    comptime test_file_path, file_path = input_paths[2025, 8]()
 
     print("\nAoC 2025 - Day 8")
 
