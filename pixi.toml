@@ -10,8 +10,8 @@ aoc25 = "python -c \"import os, sys; [sys.exit(1) for i in range(1, 13) if os.sy
 
 
 [dependencies]
-mojo = ">=0.26.2.0.dev2026021416,<0.27"
-max = ">=26.2.0.dev2026021416,<27"
+mojo = ">=0.26.2.0.dev2026021918,<0.27"
+max = ">=26.2.0.dev2026021918,<27"
 python = ">=3.13.12,<3.14"
 numpy = ">=2.4.2,<3"
 polars = ">=1.38.1,<2"

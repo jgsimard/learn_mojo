@@ -6,7 +6,9 @@ comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
 
 
 fn input_paths[year: Int, day: Int]() -> Tuple[String, String]:
-    var test_file_path = "{}/{}/d{}/test_input.txt".format(aoc_base_path, year, day)
+    var test_file_path = "{}/{}/d{}/test_input.txt".format(
+        aoc_base_path, year, day
+    )
     var file_path = "{}/{}/d{}/input.txt".format(aoc_base_path, year, day)
     return (test_file_path, file_path)
 
@@ -16,34 +18,32 @@ fn sum_file[
     parallel: Bool,
     sep: String = "\n",
 ](file_path: String) raises -> Int:
-    var content: String
     with open(file_path, "r") as f:
         content = f.read()
-    var lines = content.split(StringSlice(sep))
-
-    @parameter
-    if parallel:
-        var total = Atomic[DType.int](0)
+        lines = content.split(StringSlice(sep))
 
         @parameter
-        fn worker(idx: Int):
-            try:
-                var line = lines[idx]
-                if len(line) == 0:
-                    return
-                _ = total.fetch_add(Scalar[DType.int](process_fn(line)))
-            except:
-                pass
+        if parallel:
+            total = Atomic[DType.int](0)
 
-        parallelize[worker](len(lines))
+            fn worker(idx: Int) capturing:
+                try:
+                    line = lines[idx]
+                    if len(line) == 0:
+                        return
+                    _ = total.fetch_add(Scalar[DType.int](process_fn(line)))
+                except:
+                    pass
 
-        return Int(total.load())
+            parallelize[worker](len(lines))
 
-    else:
-        var total = 0
-        for line in lines:
-            total += process_fn(line)
-        return total
+            return Int(total.load())
+
+        else:
+            var total = 0
+            for line in lines:
+                total += process_fn(line)
+            return total
 
 
 fn basic_bench[
