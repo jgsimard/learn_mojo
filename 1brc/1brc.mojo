@@ -35,7 +35,7 @@ struct MeasurementFloat(Measurement):
         var min = round(self.min, 1)
         var max = round(self.max, 1)
         var mean = round(self.mean, 1)
-        return "{}/{}/{}".format(min, mean, max)
+        return t"{min}/{mean}/{max}"
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
@@ -71,7 +71,7 @@ struct MeasurementInt(Measurement):
         var min = round(Float32(self.min) / 10.0, 1)
         var max = round(Float32(self.max) / 10.0, 1)
         var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
-        return "{}/{}/{}".format(min, mean, max)
+        return t"{min}/{mean}/{max}"
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
@@ -195,7 +195,7 @@ fn process_chunk[
                     var val_abs = vals[0] * (1 - is_short) + vals[1] * is_short
                     val = sign * Int(val_abs)
                 else:
-                    raise "unsuported version"
+                    comptime assert False, "unsuported version"
 
                 try:
                     d[hash_city].update(val)
@@ -391,7 +391,10 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
             capacity=1024
         )
         with open(file_path, "r") as file:
-            var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
+            var bytes = file.read_bytes()
+            var data = Span[UInt8, ImmutAnyOrigin](
+                ptr=bytes.unsafe_ptr(), length=len(bytes)
+            )
 
             process_chunk[simd_parsing=False](
                 data, 0, len(data) - 1, d, city_names
@@ -404,14 +407,20 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
             capacity=1024
         )
         with open(file_path, "r") as file:
-            var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
+            var bytes = file.read_bytes()
+            var data = Span[UInt8, ImmutAnyOrigin](
+                ptr=bytes.unsafe_ptr(), length=len(bytes)
+            )
             process_chunk(data, 0, len(data) - 1, d, city_names)
 
         return format_output(d, city_names)
 
     elif version == 4:
         with open(file_path, "r") as file:
-            var data = Span[UInt8, ImmutAnyOrigin](file.read_bytes())
+            var bytes = file.read_bytes()
+            var data = Span[UInt8, ImmutAnyOrigin](
+                ptr=bytes.unsafe_ptr(), length=len(bytes)
+            )
             return process_parallel(data)
 
     elif version == 5:
@@ -420,7 +429,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         return process_parallel(data)
 
     else:
-        raise "unsuported version"
+        comptime assert False, "unsuported version"
 
 
 fn main() raises:
@@ -443,7 +452,7 @@ fn main() raises:
         assert_equal(result_hash, hash_1M)
         # assert_equal(result_hash, hash_100M)
 
-        print("v{} : correct hash".format(v))
+        print(t"v{v} : correct hash")
 
     test[0]()
     test[1]()
@@ -462,17 +471,13 @@ fn main() raises:
         fn bench_fn() raises:
             _ = process_1brc[v](file_path)
 
-        var time_ms = round(run[func1=bench_fn](max_iters=10).mean(Unit.ms), 1)
+        time_ms = round(run[func1=bench_fn](max_iters=10).mean(Unit.ms), 1)
         if base_time and prev_time:
-            var prev_speedup = round(prev_time.value() / time_ms, 1)
-            var base_speedup = round(base_time.value() / time_ms, 1)
-            print(
-                "v{} : {} ms, {} X prev, {} X base".format(
-                    v, time_ms, prev_speedup, base_speedup
-                )
-            )
+            vs_prev = round(prev_time.value() / time_ms, 1)
+            vs_base = round(base_time.value() / time_ms, 1)
+            print(t"v{v} : {time_ms} ms, {vs_prev} X prev, {vs_base} X base")
         else:
-            print("v{} : {} ms".format(v, time_ms))
+            print(t"v{v} : {time_ms} ms")
         return time_ms
 
     var t0 = bench[0]()

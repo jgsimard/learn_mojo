@@ -6,10 +6,8 @@ comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
 
 
 fn input_paths[year: Int, day: Int]() -> Tuple[String, String]:
-    var test_file_path = "{}/{}/d{}/test_input.txt".format(
-        aoc_base_path, year, day
-    )
-    var file_path = "{}/{}/d{}/input.txt".format(aoc_base_path, year, day)
+    test_file_path = t"{aoc_base_path}/{year}/d{day}/test_input.txt"
+    file_path = t"{aoc_base_path}/{year}/d{day}/input.txt"
     return (test_file_path, file_path)
 
 
@@ -54,4 +52,4 @@ fn basic_bench[
 
     var time_us = run[func1=bench_fn](max_iters=30).mean(Unit.us)
     time_us = round(time_us, 1)
-    print("part {}, t = {} us".format(p, time_us))
+    print(t"part {p}, t = {time_us} us")
