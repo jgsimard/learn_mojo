@@ -108,8 +108,7 @@ fn process_chunk[
 ) raises -> None:
     var pos = start
 
-    @parameter
-    if simd_parsing:
+    comptime if simd_parsing:
         comptime simd_width = simd_width_of[DType.uint8]()
         comptime bits_type = DType.uint64 if simd_width == 64 else DType.uint32
 
@@ -161,8 +160,7 @@ fn process_chunk[
 
                 var val: Int
 
-                @parameter
-                if temp_alg == "v2":
+                comptime if temp_alg == "v2":
                     # slower if i load from chunk-- why ???
                     # base = semicolon_idx + 1 + Int(is_neg)
                     # var digits = SIMD[DType.int16, 4](chunk.as_bytes().unsafe_ptr().load[width=4](base) - ZERO)
@@ -352,8 +350,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
     - 5: Memory Mapped File
     """
 
-    @parameter
-    if version == 0:
+    comptime if version == 0:
         var d = Dict[String, MeasurementFloat]()
         with open(file_path, "r") as f:
             var lines = f.read().split("\n")
