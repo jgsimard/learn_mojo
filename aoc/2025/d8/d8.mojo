@@ -138,8 +138,7 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
             points.append(Point(x, y, z, i))
     var nb_pts = len(points)
 
-    @parameter
-    if p == 1:
+    comptime if p == 1:
         sort(points)  # sort by x
 
         var max_heap = MaxHeap[PairDist](nb_to_connect)

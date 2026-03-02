@@ -14,8 +14,7 @@ fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
         var id_min = atol(temp[0])
         var id_max = atol(temp[1])
 
-        @parameter
-        if version == 0:
+        comptime if version == 0:
             for id in range(id_min, id_max + 1):
                 var id_str = String(id)
                 len_id = len(id_str)
@@ -61,8 +60,7 @@ fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
 
 @always_inline
 fn get_n_digits[version: String = "str"](v: Int) -> Int:
-    @parameter
-    if version == "log10":
+    comptime if version == "log10":
         return Int(floor(log10(Float64(v)))) + 1
 
     elif version == "str":
@@ -118,8 +116,7 @@ fn main() raises:
     comptime ver = [0, 1, 2]
     comptime par = [False, True]
 
-    @parameter
-    for v, p in product(ver, par):
+    comptime for v, p in product(ver, par):
         assert_equal(part_1[v, p](test_file_path), 1227775554)
 
     print("part 1:", part_1[2](file_path))
@@ -130,8 +127,7 @@ fn main() raises:
     @parameter
     fn bench[part: Int, v: Int, parallel: Bool = False]() raises:
         fn bench_fn() raises:
-            @parameter
-            if part == 1:
+            comptime if part == 1:
                 _ = part_1[v, parallel](file_path)
             else:
                 _ = part_2[parallel](file_path)

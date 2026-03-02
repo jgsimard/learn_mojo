@@ -20,8 +20,7 @@ fn sum_file[
         content = f.read()
         lines = content.split(StringSlice(sep))
 
-        @parameter
-        if parallel:
+        comptime if parallel:
             total = Atomic[DType.int](0)
 
             fn worker(idx: Int) capturing:

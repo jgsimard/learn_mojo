@@ -63,8 +63,7 @@ fn day4[part: Int](file_path: String) raises -> Int:
                 num += 1
                 changed.append((x, y))
 
-        @parameter
-        if part == 1:
+        comptime if part == 1:
             break
 
         if len(changed) == 0:

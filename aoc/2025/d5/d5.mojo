@@ -60,8 +60,7 @@ fn day5[p: Int](file_path: String) raises -> Int:
             else:
                 no_overlap_ranges.append(r.copy())
 
-        @parameter
-        if p == 1:
+        comptime if p == 1:
             for input_line in input_lines:
                 if len(input_line) == 0:
                     continue
