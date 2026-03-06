@@ -1,6 +1,6 @@
-from algorithm import parallelize
-from os import Atomic
-from benchmark import run, Unit
+from std.algorithm import parallelize
+from std.os import Atomic
+from std.benchmark import run, Unit
 
 comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
 

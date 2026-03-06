@@ -1,7 +1,7 @@
-from testing import assert_equal
-from benchmark import run, Unit
-from memory import memset_zero
-from utils.numerics import max_finite
+from std.testing import assert_equal
+from std.benchmark import run, Unit
+from std.memory import memset_zero
+from std.utils.numerics import max_finite
 
 from aoc.aoc_utils import input_paths, basic_bench
 
@@ -229,5 +229,5 @@ fn main() raises:
     assert_equal(day8[2](test_file_path), 25272)
     print("part 2:", day8[2](file_path))
 
-    basic_bench[day8[nb_to_connect=1000], 1, file_path]()
-    basic_bench[day8[nb_to_connect=1000], 2, file_path]()
+    basic_bench[day8[nb_to_connect=1000, _], 1, file_path]()
+    basic_bench[day8[nb_to_connect=1000, _], 2, file_path]()

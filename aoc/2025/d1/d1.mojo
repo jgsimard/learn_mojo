@@ -1,5 +1,6 @@
-from testing import assert_equal
-from benchmark import run, Unit
+from std.testing import assert_equal
+from std.benchmark import run, Unit
+
 from aoc.aoc_utils import input_paths, basic_bench
 
 

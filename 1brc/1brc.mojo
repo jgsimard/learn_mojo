@@ -1,15 +1,15 @@
-from algorithm import parallelize
-from benchmark import run, Unit
-from bit import count_leading_zeros, count_trailing_zeros
-from ffi import external_call
-from memory import pack_bits
-from os import SEEK_END
-from sys import num_physical_cores, simd_width_of
-from testing import assert_equal
+from std.algorithm import parallelize
+from std.benchmark import run, Unit
+from std.bit import count_leading_zeros, count_trailing_zeros
+from std.ffi import external_call
+from std.memory import pack_bits
+from std.os import SEEK_END
+from std.sys import num_physical_cores, simd_width_of
+from std.testing import assert_equal
 
 
 # parametrized trait would be nice
-comptime Measurement = Copyable & Stringable & TrivialRegisterPassable & Writable
+comptime Measurement = Copyable & TrivialRegisterPassable & Writable
 
 
 @fieldwise_init
@@ -229,7 +229,7 @@ fn process_chunk[
 
 
 # parallel
-fn find_next_newline(data: Span[UInt8], start: Int) -> Int:
+fn find_next_newline(data: Span[UInt8, ImmutAnyOrigin], start: Int) -> Int:
     """Find the next newline after start position."""
     for i in range(start, len(data)):
         if data[i] == UInt8(ord("\n")):

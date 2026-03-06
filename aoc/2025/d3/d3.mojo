@@ -1,10 +1,10 @@
-from testing import assert_equal
-from benchmark import run, Unit
+from std.testing import assert_equal
+from std.benchmark import run, Unit
 
 from aoc.aoc_utils import sum_file, input_paths, basic_bench, basic_bench
 
 
-fn max_argmax(numbers: Span[UInt8]) raises -> Tuple[Int, Int]:
+fn max_argmax(numbers: Span[UInt8, ...]) raises -> Tuple[Int, Int]:
     if len(numbers) == 0:
         raise Error("empty list")
 

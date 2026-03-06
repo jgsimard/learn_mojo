@@ -1,8 +1,8 @@
-from testing import assert_equal
-from bit import count_leading_zeros, count_trailing_zeros
-from math import log10, floor
-from benchmark import run, Unit
-from itertools import product
+from std.testing import assert_equal
+from std.bit import count_leading_zeros, count_trailing_zeros
+from std.math import log10, floor
+from std.benchmark import run, Unit
+from std.itertools import product
 
 from aoc.aoc_utils import sum_file, input_paths
 

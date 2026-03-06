@@ -1,6 +1,6 @@
-from testing import assert_equal
-from benchmark import run, Unit
-from itertools import product
+from std.testing import assert_equal
+from std.benchmark import run, Unit
+from std.itertools import product
 
 from aoc.aoc_utils import sum_file, input_paths, basic_bench
 
