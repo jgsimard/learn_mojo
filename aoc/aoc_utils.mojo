@@ -6,8 +6,8 @@ comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
 
 
 fn input_paths[year: Int, day: Int]() -> Tuple[String, String]:
-    test_file_path = t"{aoc_base_path}/{year}/d{day}/test_input.txt"
-    file_path = t"{aoc_base_path}/{year}/d{day}/input.txt"
+    test_file_path = String(t"{aoc_base_path}/{year}/d{day}/test_input.txt")
+    file_path = String(t"{aoc_base_path}/{year}/d{day}/input.txt")
     return (test_file_path, file_path)
 
 

@@ -35,7 +35,7 @@ struct MeasurementFloat(Measurement):
         var min = round(self.min, 1)
         var max = round(self.max, 1)
         var mean = round(self.mean, 1)
-        return t"{min}/{mean}/{max}"
+        return String(t"{min}/{mean}/{max}")
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
@@ -71,7 +71,7 @@ struct MeasurementInt(Measurement):
         var min = round(Float32(self.min) / 10.0, 1)
         var max = round(Float32(self.max) / 10.0, 1)
         var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
-        return t"{min}/{mean}/{max}"
+        return String(t"{min}/{mean}/{max}")
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
