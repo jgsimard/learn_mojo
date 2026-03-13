@@ -5,13 +5,13 @@ from std.benchmark import run, Unit
 comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
 
 
-fn input_paths[year: Int, day: Int]() -> Tuple[String, String]:
+def input_paths[year: Int, day: Int]() -> Tuple[String, String]:
     test_file_path = String(t"{aoc_base_path}/{year}/d{day}/test_input.txt")
     file_path = String(t"{aoc_base_path}/{year}/d{day}/input.txt")
     return (test_file_path, file_path)
 
 
-fn sum_file[
+def sum_file[
     process_fn: fn(StringSlice) raises -> Int,
     parallel: Bool,
     sep: String = "\n",
@@ -23,7 +23,7 @@ fn sum_file[
         comptime if parallel:
             total = Atomic[DType.int](0)
 
-            fn worker(idx: Int) capturing:
+            def worker(idx: Int) capturing:
                 try:
                     line = lines[idx]
                     if len(line) == 0:
@@ -43,10 +43,10 @@ fn sum_file[
             return total
 
 
-fn basic_bench[
+def basic_bench[
     func: fn[Int](String) raises -> Int, p: Int, file_path: String
 ]() raises:
-    fn bench_fn() raises:
+    def bench_fn() raises:
         _ = func[p](file_path)
 
     var time_us = run[func1=bench_fn](max_iters=30).mean(Unit.us)

@@ -5,7 +5,7 @@ from memory import memset_zero
 from aoc.aoc_utils import input_paths, basic_bench, sum_file
 
 
-fn next_power_of_10(n: Int) -> Int:
+def next_power_of_10(n: Int) -> Int:
     if n < 10:
         return 10
     elif n < 100:
@@ -14,7 +14,7 @@ fn next_power_of_10(n: Int) -> Int:
         return 1000
 
 
-fn try_ops[part: Int](line: List[Int], target: Int, idx: Int) -> Bool:
+def try_ops[part: Int](line: List[Int], target: Int, idx: Int) -> Bool:
     v = line[idx]
     if idx == 0:
         return target == v
@@ -41,8 +41,8 @@ fn try_ops[part: Int](line: List[Int], target: Int, idx: Int) -> Bool:
         return a or m or c
 
 
-fn day7[p: Int](file_path: String) raises -> Int:
-    fn process_line[p: Int](line: StringSlice) raises -> Int:
+def day7[p: Int](file_path: String) raises -> Int:
+    def process_line[p: Int](line: StringSlice) raises -> Int:
         if len(line) == 0:
             return 0
         s = line.split(":")
@@ -55,7 +55,7 @@ fn day7[p: Int](file_path: String) raises -> Int:
     return sum_file[process_line[p], parallel=True](file_path)
 
 
-fn main() raises:
+def main() raises:
     comptime test_file_path, file_path = input_paths[2024, 7]()
 
     print("\nAoC 2024 - Day 7")

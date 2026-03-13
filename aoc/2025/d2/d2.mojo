@@ -7,8 +7,8 @@ from std.itertools import product
 from aoc.aoc_utils import sum_file, input_paths
 
 
-fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
-    fn process_range[version: Int](range_id: StringSlice) raises -> Int:
+def part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
+    def process_range[version: Int](range_id: StringSlice) raises -> Int:
         var value = 0
         var temp = range_id.split("-")
         var id_min = atol(temp[0])
@@ -19,7 +19,7 @@ fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
                 var id_str = String(id)
                 len_id = len(id_str)
                 mid = len_id // 2
-                if id_str[:mid] == id_str[mid:]:
+                if id_str[byte=:mid] == id_str[byte=mid:]:
                     value += id
 
         elif version == 1:
@@ -59,7 +59,7 @@ fn part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
 
 
 @always_inline
-fn get_n_digits[version: String = "str"](v: Int) -> Int:
+def get_n_digits[version: String = "str"](v: Int) -> Int:
     comptime if version == "log10":
         return Int(floor(log10(Float64(v)))) + 1
 
@@ -75,8 +75,8 @@ fn get_n_digits[version: String = "str"](v: Int) -> Int:
         return n_digits
 
 
-fn part_2[parallel: Bool = False](file_path: String) raises -> Int:
-    fn process_range(range_id: StringSlice) raises -> Int:
+def part_2[parallel: Bool = False](file_path: String) raises -> Int:
+    def process_range(range_id: StringSlice) raises -> Int:
         var parts = range_id.split("-")
         var id_min = atol(parts[0])
         var id_max = atol(parts[1])
@@ -108,7 +108,7 @@ fn part_2[parallel: Bool = False](file_path: String) raises -> Int:
     return sum_file[process_range, parallel, ","](file_path)
 
 
-fn main() raises:
+def main() raises:
     comptime test_file_path, file_path = input_paths[2025, 2]()
 
     print("\nAoC 2025 - Day 2")
@@ -125,8 +125,8 @@ fn main() raises:
     print("part 2:", part_2(file_path))
 
     @parameter
-    fn bench[part: Int, v: Int, parallel: Bool = False]() raises:
-        fn bench_fn() raises:
+    def bench[part: Int, v: Int, parallel: Bool = False]() raises:
+        def bench_fn() raises:
             comptime if part == 1:
                 _ = part_1[v, parallel](file_path)
             else:

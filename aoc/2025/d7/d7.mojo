@@ -5,7 +5,7 @@ from std.memory import memset_zero
 from aoc.aoc_utils import input_paths, basic_bench
 
 
-fn day7[p: Int](file_path: String) raises -> Int:
+def day7[p: Int](file_path: String) raises -> Int:
     var total_split = 0
     var total_world = 1
     with open(file_path, "r") as f:
@@ -35,7 +35,7 @@ fn day7[p: Int](file_path: String) raises -> Int:
     return total_split if p == 1 else total_world
 
 
-fn main() raises:
+def main() raises:
     comptime test_file_path, file_path = input_paths[2025, 7]()
 
     print("\nAoC 2025 - Day 7")

@@ -13,7 +13,7 @@ struct Point(Comparable, Copyable, RegisterPassable, Writable):
     var z: Int
     var id: Int
 
-    fn __lt__(self: Self, rhs: Self) -> Bool:
+    def __lt__(self: Self, rhs: Self) -> Bool:
         return self.x < rhs.x
 
 
@@ -23,27 +23,27 @@ struct PairDist(Comparable, Copyable, RegisterPassable, Writable):
     var id_0: Int
     var id_1: Int
 
-    fn __lt__(self: Self, rhs: Self) -> Bool:
+    def __lt__(self: Self, rhs: Self) -> Bool:
         return self.dist < rhs.dist
 
 
 struct MaxHeap[T: Comparable & Copyable](Sized):
     var data: List[Self.T]
 
-    fn __init__(out self, capacity: Int = 0):
+    def __init__(out self, capacity: Int = 0):
         self.data = List[Self.T](capacity=capacity)
 
-    fn __len__(self) -> Int:
+    def __len__(self) -> Int:
         return len(self.data)
 
-    fn top(self) -> ref[self.data] Self.T:
+    def top(self) -> ref[self.data] Self.T:
         return self.data[0]
 
-    fn push(mut self, var value: Self.T):
+    def push(mut self, var value: Self.T):
         self.data.append(value^)
         self._bubble_up(len(self.data) - 1)
 
-    fn pop(mut self) -> Self.T:
+    def pop(mut self) -> Self.T:
         if len(self.data) == 1:
             return self.data.pop()
 
@@ -52,11 +52,11 @@ struct MaxHeap[T: Comparable & Copyable](Sized):
         self._bubble_down(0)
         return root_val^
 
-    fn replace_root(mut self, var value: Self.T):
+    def replace_root(mut self, var value: Self.T):
         self.data[0] = value^
         self._bubble_down(0)
 
-    fn _bubble_up(mut self, index: Int):
+    def _bubble_up(mut self, index: Int):
         var curr = index
         while curr > 0:
             var parent = (curr - 1) // 2
@@ -66,7 +66,7 @@ struct MaxHeap[T: Comparable & Copyable](Sized):
             else:
                 break
 
-    fn _bubble_down(mut self, index: Int):
+    def _bubble_down(mut self, index: Int):
         var curr = index
         var size = len(self.data)
         while True:
@@ -86,7 +86,7 @@ struct MaxHeap[T: Comparable & Copyable](Sized):
                 break
 
 
-fn l2_squared(p1: Point, p2: Point) -> Int:
+def l2_squared(p1: Point, p2: Point) -> Int:
     var dx = p1.x - p2.x
     var dy = p1.y - p2.y
     var dz = p1.z - p2.z
@@ -97,11 +97,11 @@ struct DisjointSetUnion:
     var parent: List[Int]
     var size: List[Int]
 
-    fn __init__(out self, n: Int):
+    def __init__(out self, n: Int):
         self.parent = [i for i in range(n)]
         self.size = [1] * n
 
-    fn find(mut self, i: Int) -> Int:
+    def find(mut self, i: Int) -> Int:
         var root = i
         while self.parent[root] != root:
             root = self.parent[root]
@@ -114,7 +114,7 @@ struct DisjointSetUnion:
             curr = next_node
         return root
 
-    fn union(mut self, i: Int, j: Int):
+    def union(mut self, i: Int, j: Int):
         var root_i = self.find(i)
         var root_j = self.find(j)
         if root_i != root_j:
@@ -127,7 +127,7 @@ struct DisjointSetUnion:
                 self.size[root_i] += self.size[root_j]
 
 
-fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
+def day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
     var points = List[Point]()
     with open(file_path, "r") as f:
         for i, line in enumerate(f.read().split("\n")):
@@ -218,7 +218,7 @@ fn day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
         return points[last_u].x * points[last_v].x
 
 
-fn main() raises:
+def main() raises:
     comptime test_file_path, file_path = input_paths[2025, 8]()
 
     print("\nAoC 2025 - Day 8")

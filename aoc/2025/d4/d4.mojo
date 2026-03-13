@@ -10,16 +10,16 @@ struct Grid(Copyable):
     var h: Int
     var w: Int
 
-    fn __init__(out self, w: Int, h: Int):
+    def __init__(out self, w: Int, h: Int):
         self.data = List[Int8](length=h * w, fill=0)
         self.h = h
         self.w = w
 
-    fn __getitem__(mut self, i: Int, j: Int) -> ref[self.data] Int8:
+    def __getitem__(mut self, i: Int, j: Int) -> ref[self.data] Int8:
         return self.data[i * self.w + j]
 
 
-fn day4[part: Int](file_path: String) raises -> Int:
+def day4[part: Int](file_path: String) raises -> Int:
     var grid: Grid
     with open(file_path, "r") as f:
         var content = f.read().split("\n")
@@ -76,7 +76,7 @@ fn day4[part: Int](file_path: String) raises -> Int:
     return num
 
 
-fn main() raises:
+def main() raises:
     comptime test_file_path, file_path = input_paths[2025, 4]()
 
     print("\nAoC 2025 - Day 4")

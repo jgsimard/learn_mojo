@@ -9,14 +9,14 @@ struct Range(Comparable, Copyable, Writable):
     var min: Int
     var max: Int
 
-    fn contains(self, value: Int) -> Bool:
+    def contains(self, value: Int) -> Bool:
         return self.min <= value <= self.max
 
-    fn __lt__(self: Self, rhs: Self) -> Bool:
+    def __lt__(self: Self, rhs: Self) -> Bool:
         return self.min < rhs.min
 
 
-fn find_containing_range(ranges: List[Range], value: Int) -> Bool:
+def find_containing_range(ranges: List[Range], value: Int) -> Bool:
     var low = 0
     var high = len(ranges) - 1
 
@@ -33,7 +33,7 @@ fn find_containing_range(ranges: List[Range], value: Int) -> Bool:
     return False
 
 
-fn day5[p: Int](file_path: String) raises -> Int:
+def day5[p: Int](file_path: String) raises -> Int:
     var nb_fresh = 0
     with open(file_path, "r") as f:
         var sections = f.read().split("\n\n")
@@ -82,7 +82,7 @@ fn day5[p: Int](file_path: String) raises -> Int:
     return nb_fresh
 
 
-fn main() raises:
+def main() raises:
     comptime test_file_path, file_path = input_paths[2025, 5]()
 
     print("\nAoC 2025 - Day 5")

@@ -4,7 +4,7 @@ from std.benchmark import run, Unit
 from aoc.aoc_utils import input_paths, basic_bench
 
 
-fn day1[p: Int](file_path: String) raises -> Int:
+def day1[p: Int](file_path: String) raises -> Int:
     var pos = 50
     var n_zero = 0
     for line in open(file_path, "r").read().split("\n"):
@@ -12,7 +12,7 @@ fn day1[p: Int](file_path: String) raises -> Int:
             continue
 
         var dir = -1 if line.as_bytes()[0] == UInt8(ord("L")) else 1
-        var mag = atol(line[1:])
+        var mag = atol(line[byte=1:])
 
         if p == 2:
             n_zero += mag // 100
@@ -30,7 +30,7 @@ fn day1[p: Int](file_path: String) raises -> Int:
     return n_zero
 
 
-fn main() raises:
+def main() raises:
     comptime test_file_path, file_path = input_paths[2025, 1]()
 
     print("AoC 2025 - Day 1")

@@ -20,7 +20,7 @@ struct State:
     var ball: Ball
     var sim_min_width: Float64
 
-    fn __init__(out self):
+    def __init__(out self):
         self.gravity = Vector2(0.0, -10.0)
         self.dt = 1.0 / 60.0
         self.ball = Ball(
@@ -28,7 +28,7 @@ struct State:
         )
         self.sim_min_width = 20.0
 
-    fn simulate(mut state: Self, sim_width: Float64):
+    def simulate(mut state: Self, sim_width: Float64):
         # Physics integration
         state.ball.vel.x += state.gravity.x * state.dt
         state.ball.vel.y += state.gravity.y * state.dt
@@ -49,7 +49,7 @@ struct State:
             state.ball.vel.y = -state.ball.vel.y
 
 
-fn main() raises:
+def main() raises:
     var pg = Python.import_module("pygame")
     pg.init()
 

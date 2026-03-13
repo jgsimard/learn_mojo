@@ -19,25 +19,25 @@ struct MeasurementFloat(Measurement):
     var max: Float64
     var n: Float64
 
-    fn __init__(out self, val: Float64):
+    def __init__(out self, val: Float64):
         self.min = val
         self.max = val
         self.mean = val
         self.n = 1.0
 
-    fn update(mut self, val: Float64):
+    def update(mut self, val: Float64):
         self.min = min(val, self.min)
         self.max = max(val, self.max)
         self.n += 1.0
         self.mean += (val - self.mean) / self.n
 
-    fn __str__(self) -> String:
+    def __str__(self) -> String:
         var min = round(self.min, 1)
         var max = round(self.max, 1)
         var mean = round(self.mean, 1)
         return String(t"{min}/{mean}/{max}")
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
 
 
@@ -47,43 +47,43 @@ struct MeasurementInt(Measurement):
     var max: Int
     var n: Int
 
-    fn __init__(out self, val: Int):
+    def __init__(out self, val: Int):
         self.min = val
         self.max = val
         self.sum = val
         self.n = 1
 
     @always_inline
-    fn update(mut self, val: Int):
+    def update(mut self, val: Int):
         self.min = min(val, self.min)
         self.max = max(val, self.max)
         self.sum += val
         self.n += 1
 
     @always_inline
-    fn merge(mut self, other: Self):
+    def merge(mut self, other: Self):
         self.min = min(other.min, self.min)
         self.max = max(other.max, self.max)
         self.sum += other.sum
         self.n += other.n
 
-    fn __str__(self) -> String:
+    def __str__(self) -> String:
         var min = round(Float32(self.min) / 10.0, 1)
         var max = round(Float32(self.max) / 10.0, 1)
         var mean = round(Float32(self.sum) / 10.0 / Float32(self.n), 1)
         return String(t"{min}/{mean}/{max}")
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write(self.__str__())
 
 
-fn format_output[M: Measurement](d: Dict[String, M]) raises -> String:
+def format_output[M: Measurement](d: Dict[String, M]) raises -> String:
     var cities = ["{}={}".format(entry.key, entry.value) for entry in d.items()]
     sort(cities)
     return "{" + ", \n".join(cities) + "}"
 
 
-fn format_output[
+def format_output[
     M: Measurement
 ](
     d: Dict[UInt64, M],
@@ -97,7 +97,7 @@ fn format_output[
     return "{" + ", \n".join(cities) + "}"
 
 
-fn process_chunk[
+def process_chunk[
     temp_alg: String = "v5", simd_parsing: Bool = True
 ](
     data: Span[UInt8, ImmutAnyOrigin],
@@ -229,7 +229,7 @@ fn process_chunk[
 
 
 # parallel
-fn find_next_newline(data: Span[UInt8, ImmutAnyOrigin], start: Int) -> Int:
+def find_next_newline(data: Span[UInt8, ImmutAnyOrigin], start: Int) -> Int:
     """Find the next newline after start position."""
     for i in range(start, len(data)):
         if data[i] == UInt8(ord("\n")):
@@ -237,7 +237,7 @@ fn find_next_newline(data: Span[UInt8, ImmutAnyOrigin], start: Int) -> Int:
     return len(data)
 
 
-fn process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
+def process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
     var num_workers = num_physical_cores()
 
     # Calculate aligned chunk boundaries
@@ -265,7 +265,7 @@ fn process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
 
     # Process chunks in parallel
     @parameter
-    fn process_worker(worker_id: Int):
+    def process_worker(worker_id: Int):
         try:
             process_chunk(
                 data,
@@ -310,7 +310,7 @@ struct MMap[
     var _data: Self.ptr
     var _size: Int
 
-    fn __init__(out self, path: String) raises:
+    def __init__(out self, path: String) raises:
         with open(path, "r") as file:
             comptime PROT_READ = 1
             comptime MAP_SHARED = 1
@@ -329,15 +329,15 @@ struct MMap[
         if Int(self._data) == -1:
             raise Error("mmap failed")
 
-    fn __del__(deinit self):
+    def __del__(deinit self):
         if self._data:
             _ = external_call["munmap", Int](self._data, self._size)
 
-    fn as_span(ref[Self.origin] self) -> Span[UInt8, Self.origin]:
+    def as_span(ref[Self.origin] self) -> Span[UInt8, Self.origin]:
         return Span(ptr=self._data, length=self._size)
 
 
-fn process_1brc[version: Int](file_path: String) raises -> String:
+def process_1brc[version: Int](file_path: String) raises -> String:
     """
     Unified 1BRC processor using compile-time version selection.
 
@@ -429,7 +429,7 @@ fn process_1brc[version: Int](file_path: String) raises -> String:
         comptime assert False, "unsuported version"
 
 
-fn main() raises:
+def main() raises:
     comptime file_path = "./measurements.txt"
     comptime hash_1M = 7830574609753597440
     comptime hash_100M = 7465477878325822113
@@ -439,7 +439,7 @@ fn main() raises:
 
     print("Testing...")
 
-    fn test[v: Int]() raises:
+    def test[v: Int]() raises:
         var result = process_1brc[v](file_path)
         var result_hash = hash(result)
 
@@ -460,12 +460,12 @@ fn main() raises:
 
     print("Benchmarking...")
 
-    fn bench[
+    def bench[
         v: Int
     ](
         base_time: Optional[Float64] = None, prev_time: Optional[Float64] = None
     ) raises -> Float64:
-        fn bench_fn() raises:
+        def bench_fn() raises:
             _ = process_1brc[v](file_path)
 
         time_ms = round(run[func1=bench_fn](max_iters=10).mean(Unit.ms), 1)

@@ -4,7 +4,7 @@ from std.benchmark import run, Unit
 from aoc.aoc_utils import sum_file, input_paths, basic_bench, basic_bench
 
 
-fn max_argmax(numbers: Span[UInt8, ...]) raises -> Tuple[Int, Int]:
+def max_argmax(numbers: Span[UInt8, ...]) raises -> Tuple[Int, Int]:
     if len(numbers) == 0:
         raise Error("empty list")
 
@@ -22,8 +22,8 @@ fn max_argmax(numbers: Span[UInt8, ...]) raises -> Tuple[Int, Int]:
     return (Int(max_val - 48), max_idx)
 
 
-fn day3[n: Int](file_path: String) raises -> Int:
-    fn process_line(line: StringSlice) raises -> Int:
+def day3[n: Int](file_path: String) raises -> Int:
+    def process_line(line: StringSlice) raises -> Int:
         var bytes = line.as_bytes()
         var len = len(bytes)
 
@@ -41,7 +41,7 @@ fn day3[n: Int](file_path: String) raises -> Int:
     return sum_file[process_line, parallel=True](file_path)
 
 
-fn main() raises:
+def main() raises:
     comptime test_file_path, file_path = input_paths[2025, 3]()
 
     print("\nAoC 2025 - Day 3")
