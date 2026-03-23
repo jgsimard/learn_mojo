@@ -12,7 +12,7 @@ def input_paths[year: Int, day: Int]() -> Tuple[String, String]:
 
 
 def sum_file[
-    process_fn: fn(StringSlice) raises -> Int,
+    process_fn: def(StringSlice) raises -> Int,
     parallel: Bool,
     sep: String = "\n",
 ](file_path: String) raises -> Int:
@@ -44,7 +44,7 @@ def sum_file[
 
 
 def basic_bench[
-    func: fn[Int](String) raises -> Int, p: Int, file_path: String
+    func: def[Int](String) raises -> Int, p: Int, file_path: String
 ]() raises:
     def bench_fn() raises:
         _ = func[p](file_path)

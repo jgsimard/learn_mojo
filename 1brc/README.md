@@ -8,9 +8,9 @@ Timings for 1_000_000 rows (ms)
 | Version | What Changed ? | Timings | Vs Polars | Vs previous | Vs v0 |
 |---|---|---|---|---|---|
 | polars |                          | 12.0  | 1.00  | -     | 11.3 |
-| v0 |                              | 135.5 | 0.09  | -     | 1.0 |
-| v1 | Parse Temperature as Int     | 112.5 | 0.11  | 1.2   | 1.2 |
-| v2 | Hash-based city lookup       | 92.2  | 0.13  | 1.2   | 1.5 |
-| v3 | SIMD temperature parsing     | 19.3  | 0.62  | 4.8   | 7.0 |
-| v4 | parallel (8 cores)           | 6.6   | 1.82  | 2.9   | 20.5 |
-| v5 | Memory mapped file (MMap)    | 2.5   | 4.80  | 2.7   | 54.2 |
+| v0 |                              | 134.6 | 0.09  | -     |  1.0 |
+| v1 | Parse Temperature as Int     | 114.9 | 0.11  | 1.2   |  1.2 |
+| v2 | Hash-based city lookup       | 93.3  | 0.13  | 1.2   |  1.4 |
+| v3 | SIMD temperature parsing     | 13.6  | 0.62  | 6.9   |  9.9 |
+| v4 | parallel (8 cores)           | 6.2   | 1.82  | 2.2   | 21.7 |
+| v5 | Memory mapped file (MMap)    | 1.9   | 4.80  | 3.3   | 70.8 |
