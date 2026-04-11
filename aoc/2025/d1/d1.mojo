@@ -8,7 +8,7 @@ def day1[p: Int](file_path: String) raises -> Int:
     var pos = 50
     var n_zero = 0
     for line in open(file_path, "r").read().split("\n"):
-        if len(line) == 0:
+        if line.byte_length() == 0:
             continue
 
         var dir = -1 if line.as_bytes()[0] == UInt8(ord("L")) else 1

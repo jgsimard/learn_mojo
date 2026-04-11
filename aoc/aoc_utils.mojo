@@ -12,7 +12,7 @@ def input_paths[year: Int, day: Int]() -> Tuple[String, String]:
 
 
 def sum_file[
-    process_fn: def(StringSlice) raises -> Int,
+    process_fn: def(StringSlice) thin raises -> Int,
     parallel: Bool,
     sep: String = "\n",
 ](file_path: String) raises -> Int:
@@ -26,7 +26,7 @@ def sum_file[
             def worker(idx: Int) capturing:
                 try:
                     line = lines[idx]
-                    if len(line) == 0:
+                    if line.byte_length() == 0:
                         return
                     _ = total.fetch_add(Scalar[DType.int](process_fn(line)))
                 except:
@@ -44,7 +44,7 @@ def sum_file[
 
 
 def basic_bench[
-    func: def[Int](String) raises -> Int, p: Int, file_path: String
+    func: def[Int](String) thin raises -> Int, p: Int, file_path: String
 ]() raises:
     def bench_fn() raises:
         _ = func[p](file_path)

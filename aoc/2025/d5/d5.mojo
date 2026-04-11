@@ -62,7 +62,7 @@ def day5[p: Int](file_path: String) raises -> Int:
 
         comptime if p == 1:
             for input_line in input_lines:
-                if len(input_line) == 0:
+                if input_line.byte_length() == 0:
                     continue
                 var ingredient = atol(input_line)
 

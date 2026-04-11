@@ -23,12 +23,12 @@ def day4[part: Int](file_path: String) raises -> Int:
     var grid: Grid
     with open(file_path, "r") as f:
         var content = f.read().split("\n")
-        var nb_line = len(content[0])
+        var nb_line = content[0].byte_length()
         # hard code zero padding for 3x3 kernel
         grid = Grid(nb_line + 2, nb_line + 2)
 
         for i, line in enumerate(content):
-            if len(line) == 0:
+            if line.byte_length() == 0:
                 continue
             for j, e in enumerate(line.as_bytes()):
                 if e == UInt8(ord("@")):

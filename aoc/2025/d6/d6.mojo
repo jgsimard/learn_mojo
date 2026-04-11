@@ -30,14 +30,14 @@ def day6[p: Int](file_path: String) raises -> Int:
                 var raw = line.split(" ")
                 var filtered = List[Int]()
                 for e in raw:
-                    if len(e) == 0:
+                    if e.byte_length() == 0:
                         continue
                     filtered.append(atol(e))
                 nums.append(filtered^)
 
             var operators = List[Int]()
             for e in content[-1].split(" "):
-                if len(e) == 0:
+                if e.byte_length() == 0:
                     continue
                 operators.append(ord(e))
 
@@ -57,7 +57,7 @@ def day6[p: Int](file_path: String) raises -> Int:
         with open(file_path, "r") as f:
             var content = f.read().split("\n")
             var nb_line_numbers = len(content) - 1
-            var nb_char = len(content[0])
+            var nb_char = content[0].byte_length()
 
             # make values
             var grid = Grid(nb_char, nb_line_numbers)

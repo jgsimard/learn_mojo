@@ -213,13 +213,13 @@ def process_chunk[
     if pos < end:
         var tail = StringSlice(from_utf8=data[pos : end - 1])
         for l in tail.split("\n"):
-            if len(l) == 0:
+            if l.byte_length() == 0:
                 continue
             var station = l.split(";")
             var city = station[0]
             var val = atol(station[1].replace(".", ""))
 
-            var hash_city = hash(city.unsafe_ptr(), len(city))
+            var hash_city = hash(city.unsafe_ptr(), city.byte_length())
 
             try:
                 d[hash_city].update(val)
@@ -355,7 +355,7 @@ def process_1brc[version: Int](file_path: String) raises -> String:
         with open(file_path, "r") as f:
             var lines = f.read().split("\n")
             for l in lines:
-                if len(l) == 0:
+                if l.byte_length() == 0:
                     continue
                 var station = l.split(";")
                 var city = String(station[0])
@@ -371,7 +371,7 @@ def process_1brc[version: Int](file_path: String) raises -> String:
         with open(file_path, "r") as f:
             var lines = f.read().split("\n")
             for l in lines:
-                if len(l) == 0:
+                if l.byte_length() == 0:
                     continue
                 var station = l.split(";")
                 var city = String(station[0])

@@ -11,7 +11,7 @@ def day7[p: Int](file_path: String) raises -> Int:
     with open(file_path, "r") as f:
         var lines = f.read().split("\n")
 
-        var current_origins = List[Int](length=len(lines[0]), fill=0)
+        var current_origins = List[Int](length=lines[0].byte_length(), fill=0)
         for i, e in enumerate(lines[0].as_bytes()):
             if e == UInt8(ord("S")):
                 current_origins[i] = 1

@@ -17,7 +17,7 @@ def part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
         comptime if version == 0:
             for id in range(id_min, id_max + 1):
                 var id_str = String(id)
-                len_id = len(id_str)
+                len_id = id_str.byte_length()
                 mid = len_id // 2
                 if id_str[byte=:mid] == id_str[byte=mid:]:
                     value += id
@@ -64,7 +64,7 @@ def get_n_digits[version: String = "str"](v: Int) -> Int:
         return Int(floor(log10(Float64(v)))) + 1
 
     elif version == "str":
-        return len(String(v))
+        return String(v).byte_length()
 
     else:  # basic
         var temp = v
