@@ -36,7 +36,7 @@ def day6[p: Int](file_path: String) raises -> Int:
                 nums.append(filtered^)
 
             var operators = List[Int]()
-            for e in content[-1].split(" "):
+            for e in content[len(content) - 1].split(" "):
                 if e.byte_length() == 0:
                     continue
                 operators.append(ord(e))
@@ -82,7 +82,9 @@ def day6[p: Int](file_path: String) raises -> Int:
             # get output
             var current_operator = ""
             var current_val = 0
-            for op, val in zip(content[-1].codepoint_slices(), values):
+            for op, val in zip(
+                content[len(content) - 1].codepoint_slices(), values
+            ):
                 if current_operator == "":
                     current_operator = String(op)
                     current_val = val

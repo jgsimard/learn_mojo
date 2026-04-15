@@ -37,31 +37,22 @@ def day4[part: Int](file_path: String) raises -> Int:
     var num = 0
     var changed = List[Tuple[Int, Int]]()
     while True:
-        # # convolution
-        # for x, y in product(range(len_x), range(len_y)):
-        #     var cell_value = 0
-        #     for dx, dy in product(range(-1, 2), range(-1, 2)):
-        #         var nx = x + dx
-        #         var ny = y + dy
-        #         if nx >= 0 and nx < len_x and ny >= 0 and ny < len_y:
-        #             cell_value += grid[nx][ny] * kernel[dx + 1][dy + 1]
-
         # hard coded convolution
-        for x, y in product(range(1, grid.h + 1), range(1, grid.w + 1)):
-            var cell_value: Int8 = 0
-            cell_value += grid[x - 1, y - 1]
-            cell_value += grid[x - 1, y]
-            cell_value += grid[x - 1, y + 1]
-            cell_value += grid[x, y - 1]
-            # cell_value += grid.get(x, y)
-            cell_value += grid[x, y + 1]
-            cell_value += grid[x + 1, y - 1]
-            cell_value += grid[x + 1, y]
-            cell_value += grid[x + 1, y + 1]
+        for x in range(1, grid.h - 1):
+            for y in range(1, grid.w - 1):
+                var cell_value: Int8 = 0
+                cell_value += grid[x - 1, y - 1]
+                cell_value += grid[x - 1, y]
+                cell_value += grid[x - 1, y + 1]
+                cell_value += grid[x, y - 1]
+                cell_value += grid[x, y + 1]
+                cell_value += grid[x + 1, y - 1]
+                cell_value += grid[x + 1, y]
+                cell_value += grid[x + 1, y + 1]
 
-            if cell_value < 4 and grid[x, y] == 1:
-                num += 1
-                changed.append((x, y))
+                if cell_value < 4 and grid[x, y] == 1:
+                    num += 1
+                    changed.append((x, y))
 
         comptime if part == 1:
             break

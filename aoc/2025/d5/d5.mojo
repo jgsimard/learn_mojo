@@ -54,7 +54,7 @@ def day5[p: Int](file_path: String) raises -> Int:
         var no_overlap_ranges = List[Range]()
         no_overlap_ranges.append(ranges[0].copy())
         for r in ranges[1:]:
-            ref last = no_overlap_ranges[-1]
+            ref last = no_overlap_ranges[len(no_overlap_ranges) - 1]
             if r.min <= last.max + 1:  # +1 for [1-3][4-6] => [1-6]
                 last.max = max(r.max, last.max)
             else:

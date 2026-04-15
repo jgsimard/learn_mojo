@@ -36,8 +36,10 @@ struct MaxHeap[T: Comparable & Copyable](Sized):
     def __len__(self) -> Int:
         return len(self.data)
 
-    def top(self) -> ref[self.data] Self.T:
-        return self.data[0]
+    def top(ref self) -> Optional[Self.T]:
+        if len(self.data) == 0:
+            return None
+        return self.data[0].copy()
 
     def push(mut self, var value: Self.T):
         self.data.append(value^)
@@ -150,7 +152,8 @@ def day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
                 var dx = p_i.x - p_j.x
                 var dx2 = dx * dx
 
-                var current_max_dist = max_heap.top().dist
+                var top = max_heap.top()
+                var current_max_dist = top.value().dist if top else Int.MAX
 
                 if len(max_heap) == nb_to_connect and dx2 >= current_max_dist:
                     break
@@ -176,7 +179,12 @@ def day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
             if dsu.parent[i] == i:
                 final_sizes.append(dsu.size[i])
         sort(final_sizes)
-        return final_sizes[-1] * final_sizes[-2] * final_sizes[-3]
+        _len = len(final_sizes)
+        return (
+            final_sizes[_len - 1]
+            * final_sizes[_len - 2]
+            * final_sizes[_len - 3]
+        )
 
     else:
         var min_dist = [max_finite[DType.int64]() for _ in range(nb_pts)]
