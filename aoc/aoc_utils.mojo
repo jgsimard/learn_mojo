@@ -1,5 +1,5 @@
 from std.algorithm import parallelize
-from std.os import Atomic
+from std.atomic import Atomic
 from std.benchmark import run, Unit
 
 comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
