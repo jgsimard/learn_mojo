@@ -219,7 +219,7 @@ def process_chunk[
             var city = station[0]
             var val = atol(station[1].replace(".", ""))
 
-            var hash_city = hash(city.unsafe_ptr(), city.byte_length())
+            var hash_city = hash(city)
 
             try:
                 d[hash_city].update(val)
@@ -238,7 +238,7 @@ def find_next_newline(data: Span[UInt8, ImmutAnyOrigin], start: Int) -> Int:
 
 
 def process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
-    var num_workers = num_physical_cores()
+    var num_workers = num_physical_cores() * 2
 
     # Calculate aligned chunk boundaries
     var approx_chunk_size = len(data) // num_workers
@@ -257,10 +257,11 @@ def process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
 
     # Create per-thread storage
     var thread_dicts = List[Dict[UInt64, MeasurementInt]](
-        length=num_workers, fill={}
+        length=num_workers, fill=Dict[UInt64, MeasurementInt](capacity=1024)
     )
     var thread_city_names = List[Dict[UInt64, StringSlice[ImmutAnyOrigin]]](
-        length=num_workers, fill={}
+        length=num_workers,
+        fill=Dict[UInt64, StringSlice[ImmutAnyOrigin]](capacity=1024),
     )
 
     # Process chunks in parallel
@@ -288,9 +289,9 @@ def process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
             var hash_key = entry.key
             var measurement = entry.value
 
-            if hash_key in final_dict:
+            try:
                 final_dict[hash_key].merge(measurement)
-            else:
+            except:
                 final_dict[hash_key] = measurement
                 final_city_names[hash_key] = thread_city_names[worker_id][
                     hash_key
