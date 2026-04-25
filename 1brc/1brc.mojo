@@ -306,7 +306,7 @@ struct MMap[
 ]:
     """Memory Mapped File."""
 
-    comptime ptr = UnsafePointer[UInt8, Self.origin]
+    comptime ptr = Optional[UnsafePointer[UInt8, Self.origin]]
     var _data: Self.ptr
     var _size: Int
 
@@ -326,15 +326,15 @@ struct MMap[
                 0,  # offset
             )
 
-        if Int(self._data) == -1:
+        if not self._data:
             raise Error("mmap failed")
 
     def __del__(deinit self):
         if self._data:
             _ = external_call["munmap", Int](self._data, self._size)
 
-    def as_span(ref[Self.origin] self) -> Span[UInt8, Self.origin]:
-        return Span(ptr=self._data, length=self._size)
+    def as_span(self) -> Span[UInt8, Self.origin]:
+        return Span(ptr=self._data.unsafe_value(), length=self._size)
 
 
 def process_1brc[version: Int](file_path: String) raises -> String:
