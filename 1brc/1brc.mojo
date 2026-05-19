@@ -390,9 +390,7 @@ def process_1brc[version: Int](file_path: String) raises -> String:
         )
         with open(file_path, "r") as file:
             var bytes = file.read_bytes()
-            var data = Span[UInt8, ImmutAnyOrigin](
-                ptr=bytes.unsafe_ptr(), length=len(bytes)
-            )
+            var data = Span[UInt8, ImmutAnyOrigin](bytes)
 
             process_chunk[simd_parsing=False](
                 data, 0, len(data) - 1, d, city_names
@@ -406,9 +404,7 @@ def process_1brc[version: Int](file_path: String) raises -> String:
         )
         with open(file_path, "r") as file:
             var bytes = file.read_bytes()
-            var data = Span[UInt8, ImmutAnyOrigin](
-                ptr=bytes.unsafe_ptr(), length=len(bytes)
-            )
+            var data = Span[UInt8, ImmutAnyOrigin](bytes)
             process_chunk(data, 0, len(data) - 1, d, city_names)
 
         return format_output(d, city_names)
@@ -416,9 +412,7 @@ def process_1brc[version: Int](file_path: String) raises -> String:
     elif version == 4:
         with open(file_path, "r") as file:
             var bytes = file.read_bytes()
-            var data = Span[UInt8, ImmutAnyOrigin](
-                ptr=bytes.unsafe_ptr(), length=len(bytes)
-            )
+            var data = Span[UInt8, ImmutAnyOrigin](bytes)
             return process_parallel(data)
 
     elif version == 5:
