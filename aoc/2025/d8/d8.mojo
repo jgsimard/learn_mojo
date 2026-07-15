@@ -7,7 +7,7 @@ from aoc.aoc_utils import input_paths, basic_bench
 
 
 @fieldwise_init
-struct Point(Comparable, Copyable, RegisterPassable, Writable):
+struct Point(Comparable, TrivialRegisterPassable, Writable):
     var x: Int
     var y: Int
     var z: Int
@@ -18,7 +18,7 @@ struct Point(Comparable, Copyable, RegisterPassable, Writable):
 
 
 @fieldwise_init
-struct PairDist(Comparable, Copyable, RegisterPassable, Writable):
+struct PairDist(Comparable, TrivialRegisterPassable, Writable):
     var dist: Int
     var id_0: Int
     var id_1: Int
@@ -27,7 +27,7 @@ struct PairDist(Comparable, Copyable, RegisterPassable, Writable):
         return self.dist < rhs.dist
 
 
-struct MaxHeap[T: Comparable & Copyable](Sized):
+struct MaxHeap[T: Comparable & Copyable & ImplicitlyDeletable](Sized):
     var data: List[Self.T]
 
     def __init__(out self, capacity: Int = 0):
@@ -101,7 +101,7 @@ struct DisjointSetUnion:
 
     def __init__(out self, n: Int):
         self.parent = [i for i in range(n)]
-        self.size = [1] * n
+        self.size = List[Int](length=n, fill=1)
 
     def find(mut self, i: Int) -> Int:
         var root = i

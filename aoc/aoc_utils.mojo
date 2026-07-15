@@ -49,6 +49,6 @@ def basic_bench[
     def bench_fn() raises:
         _ = func[p](file_path)
 
-    var time_us = run[func1=bench_fn](max_iters=30).mean(Unit.us)
+    var time_us = run(bench_fn, max_iters=30).mean(Unit.us)
     time_us = round(time_us, 1)
     print(t"part {p}, t = {time_us} us")

@@ -132,7 +132,7 @@ def main() raises:
             else:
                 _ = part_2[parallel](file_path)
 
-        var time_us = run[func1=bench_fn](max_iters=30).mean(Unit.us)
+        var time_us = run(bench_fn, max_iters=30).mean(Unit.us)
         time_us = round(time_us, 1)
         print(t"part {part}, v{v} : {time_us} us")
 

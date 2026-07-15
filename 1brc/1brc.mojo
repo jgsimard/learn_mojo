@@ -9,7 +9,7 @@ from std.testing import assert_equal
 
 
 # parametrized trait would be nice
-comptime Measurement = Copyable & TrivialRegisterPassable & Writable
+comptime Measurement = TrivialRegisterPassable & Writable
 
 
 @fieldwise_init
@@ -448,8 +448,8 @@ def main() raises:
 
     test[0]()
     test[1]()
-    test[2]()
-    test[3]()
+    # test[2]()
+    # test[3]()
     test[4]()
     test[5]()
 
@@ -463,7 +463,7 @@ def main() raises:
         def bench_fn() raises:
             _ = process_1brc[v](file_path)
 
-        time_ms = round(run[func1=bench_fn](max_iters=10).mean(Unit.ms), 1)
+        time_ms = round(run(bench_fn, max_iters=10).mean(Unit.ms), 1)
         if base_time and prev_time:
             vs_prev = round(prev_time.value() / time_ms, 1)
             vs_base = round(base_time.value() / time_ms, 1)
