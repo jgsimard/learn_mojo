@@ -5,7 +5,7 @@ from std.itertools import product
 from aoc.aoc_utils import sum_file, input_paths, basic_bench
 
 
-struct Grid(Copyable):
+struct Grid:
     var data: List[Int8]
     var h: Int
     var w: Int
@@ -15,7 +15,7 @@ struct Grid(Copyable):
         self.h = h
         self.w = w
 
-    def __getitem__(mut self, i: Int, j: Int) -> ref[self.data] Int8:
+    def __getitem__(mut self, i: Int, j: Int) -> ref[self.data[0]] Int8:
         return self.data[i * self.w + j]
 
 

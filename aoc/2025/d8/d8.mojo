@@ -50,7 +50,8 @@ struct MaxHeap[T: Comparable & Copyable & ImplicitlyDeletable](Sized):
             return self.data.pop()
 
         var root_val = self.data[0].copy()
-        self.data[0] = self.data.pop()
+        var v = self.data.pop()
+        self.data[0] = v^
         self._bubble_down(0)
         return root_val^
 

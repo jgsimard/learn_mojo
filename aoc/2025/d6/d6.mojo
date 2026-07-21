@@ -4,7 +4,7 @@ from std.benchmark import run, Unit
 from aoc.aoc_utils import input_paths, basic_bench
 
 
-struct Grid(Copyable):
+struct Grid:
     var data: List[Int]
     var h: Int
     var w: Int
@@ -14,7 +14,7 @@ struct Grid(Copyable):
         self.h = h
         self.w = w
 
-    def __getitem__(mut self, i: Int, j: Int) -> ref[self.data] Int:
+    def __getitem__(mut self, i: Int, j: Int) -> ref[self.data[0]] Int:
         return self.data[i * self.w + j]
 
 

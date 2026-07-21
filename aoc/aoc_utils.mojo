@@ -17,8 +17,8 @@ def sum_file[
     sep: String = "\n",
 ](file_path: String) raises -> Int:
     with open(file_path, "r") as f:
-        content = f.read()
-        lines = content.split(StringSlice(sep))
+        var content = f.read()
+        var lines = content.split(sep)
 
         comptime if parallel:
             total = Atomic[DType.int](0)
