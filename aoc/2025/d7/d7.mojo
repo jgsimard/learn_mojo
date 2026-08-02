@@ -1,6 +1,6 @@
 from std.testing import assert_equal
 from std.benchmark import run, Unit
-from std.memory import memset_zero
+from std.memory import unsafe_memset_zero
 
 from aoc.aoc_utils import input_paths, basic_bench
 
@@ -19,7 +19,7 @@ def day7[p: Int](file_path: String) raises -> Int:
         var next_origins = List[Int](length=len(current_origins), fill=0)
 
         for line in lines[2::2]:
-            memset_zero(next_origins.unsafe_ptr(), len(next_origins))
+            unsafe_memset_zero(next_origins.unsafe_ptr(), len(next_origins))
             for i, (e, o) in enumerate(zip(line.as_bytes(), current_origins)):
                 if o > 0:
                     if e == UInt8(ord("^")):

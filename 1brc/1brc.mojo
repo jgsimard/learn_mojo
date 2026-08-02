@@ -1,4 +1,4 @@
-from std.algorithm import parallelize
+from max.algorithm import parallelize
 from std.benchmark import run, Unit
 from std.bit import count_leading_zeros, count_trailing_zeros
 from std.ffi import external_call
@@ -122,7 +122,7 @@ def process_chunk[
         var line_start = pos
 
         while pos + simd_width < end:
-            var chunk = data_ptr.load[width=simd_width](pos)
+            var chunk = data_ptr.unsafe_load[width=simd_width](pos)
             var newlines = pack_bits[bits_type](chunk.eq(NEW_LINE))
             var semicolons = pack_bits[bits_type](chunk.eq(SEMICOLON))
 
@@ -144,7 +144,9 @@ def process_chunk[
                     semicolons & search_mask
                 )
                 var city_len = pos + Int(semicolon_idx) - line_start
-                var hash_city = hash(data_ptr + line_start, city_len)
+                var hash_city = hash(
+                    data_ptr.unsafe_offset(line_start), city_len
+                )
 
                 # parse value
                 comptime vec_3d = SIMD[DType.int16, 4](100, 10, 0, 1)  # dd.d
@@ -167,7 +169,7 @@ def process_chunk[
                     # var bob = chunk.slice[4]()
                     # var bb = chunk.shift_left()
                     var digits = SIMD[DType.int16, 4](
-                        data_ptr.load[width=4](val_abs_start) - ZERO
+                        data_ptr.unsafe_load[width=4](val_abs_start) - ZERO
                     )
                     var val_long = Int((digits * vec_3d).reduce_add())
                     var val_short = Int((digits * vec_2d).reduce_add())
@@ -182,7 +184,7 @@ def process_chunk[
                     comptime vec_digits = vec_3d.interleave(vec_2d)
 
                     var digits_4 = SIMD[DType.int16, 4](
-                        data_ptr.load[width=4](val_abs_start) - ZERO
+                        data_ptr.unsafe_load[width=4](val_abs_start) - ZERO
                     )
 
                     # reduce_add[2] give the sum of the *interleaved* elements
@@ -330,12 +332,12 @@ struct MMap[
         if not self._data:
             raise Error("mmap failed")
 
-    def __del__(deinit self):
+    def __deinit__(deinit self):
         if self._data:
             _ = external_call["munmap", Int](self._data, self._size)
 
     def as_span(self) -> Span[UInt8, Self.origin]:
-        return Span(ptr=self._data.unsafe_value(), length=self._size)
+        return Span(unsafe_ptr=self._data.unsafe_value(), length=self._size)
 
 
 def process_1brc[version: Int](file_path: String) raises -> String:

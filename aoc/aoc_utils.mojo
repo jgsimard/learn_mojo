@@ -1,4 +1,4 @@
-from std.algorithm import parallelize
+from max.algorithm import parallelize
 from std.atomic import Atomic
 from std.benchmark import run, Unit
 
