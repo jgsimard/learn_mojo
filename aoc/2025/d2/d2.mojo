@@ -17,8 +17,8 @@ def part_1[ver: Int, parallel: Bool = False](file_path: String) raises -> Int:
         comptime if version == 0:
             for id in range(id_min, id_max + 1):
                 var id_str = String(id)
-                len_id = id_str.byte_length()
-                mid = len_id // 2
+                var len_id = id_str.byte_length()
+                var mid = len_id // 2
                 if id_str[byte=:mid] == id_str[byte=mid:]:
                     value += id
 
@@ -124,7 +124,6 @@ def main() raises:
     assert_equal(part_2(test_file_path), 4174379265)
     print("part 2:", part_2(file_path))
 
-    @parameter
     def bench[part: Int, v: Int, parallel: Bool = False]() raises:
         def bench_fn() raises:
             comptime if part == 1:

@@ -6,8 +6,8 @@ comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
 
 
 def input_paths[year: Int, day: Int]() -> Tuple[String, String]:
-    test_file_path = String(t"{aoc_base_path}/{year}/d{day}/test_input.txt")
-    file_path = String(t"{aoc_base_path}/{year}/d{day}/input.txt")
+    var test_file_path = String(t"{aoc_base_path}/{year}/d{day}/test_input.txt")
+    var file_path = String(t"{aoc_base_path}/{year}/d{day}/input.txt")
     return (test_file_path, file_path)
 
 
@@ -21,11 +21,11 @@ def sum_file[
         var lines = content.split(sep)
 
         comptime if parallel:
-            total = Atomic[DType.int](0)
+            var total = Atomic[Int](0)
 
             def worker(idx: Int) capturing:
                 try:
-                    line = lines[idx]
+                    var line = lines[idx]
                     if line.byte_length() == 0:
                         return
                     _ = total.fetch_add(Scalar[DType.int](process_fn(line)))

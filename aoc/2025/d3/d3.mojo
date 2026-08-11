@@ -30,10 +30,10 @@ def day3[n: Int](file_path: String) raises -> Int:
         if len == 0:
             return 0
 
-        line_value = 0
+        var line_value = 0
         var pos_min_next = 0
         for i in range(n, 0, -1):
-            v, p = max_argmax(bytes[pos_min_next : len - i + 1])
+            var v, p = max_argmax(bytes[pos_min_next : len - i + 1])
             line_value = line_value * 10 + v
             pos_min_next += p + 1
         return line_value

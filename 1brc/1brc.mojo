@@ -267,8 +267,7 @@ def process_parallel(data: Span[UInt8, ImmutAnyOrigin]) raises -> String:
     )
 
     # Process chunks in parallel
-    @parameter
-    def process_worker(worker_id: Int):
+    def process_worker(worker_id: Int) capturing:
         try:
             process_chunk(
                 data,
@@ -309,7 +308,7 @@ struct MMap[
 ]:
     """Memory Mapped File."""
 
-    comptime ptr = Optional[UnsafePointer[UInt8, Self.origin]]
+    comptime ptr = Optional[Pointer[UInt8, Self.origin]]
     var _data: Self.ptr
     var _size: Int
 
@@ -465,10 +464,10 @@ def main() raises:
         def bench_fn() raises:
             _ = process_1brc[v](file_path)
 
-        time_ms = round(run(bench_fn, max_iters=10).mean(Unit.ms), 1)
+        var time_ms = round(run(bench_fn, max_iters=10).mean(Unit.ms), 1)
         if base_time and prev_time:
-            vs_prev = round(prev_time.value() / time_ms, 1)
-            vs_base = round(base_time.value() / time_ms, 1)
+            var vs_prev = round(prev_time.value() / time_ms, 1)
+            var vs_base = round(base_time.value() / time_ms, 1)
             print(t"v{v} : {time_ms} ms, {vs_prev} X prev, {vs_base} X base")
         else:
             print(t"v{v} : {time_ms} ms")

@@ -27,7 +27,7 @@ struct PairDist(Comparable, TrivialRegisterPassable, Writable):
         return self.dist < rhs.dist
 
 
-struct MaxHeap[T: Comparable & Copyable & ImplicitlyDeletable](Sized):
+struct MaxHeap[T: Comparable & Copyable & Deinitable](Sized):
     var data: List[Self.T]
 
     def __init__(out self, capacity: Int = 0):
@@ -180,7 +180,7 @@ def day8[p: Int, nb_to_connect: Int = 1000](file_path: String) raises -> Int:
             if dsu.parent[i] == i:
                 final_sizes.append(dsu.size[i])
         sort(final_sizes)
-        _len = len(final_sizes)
+        var _len = len(final_sizes)
         return (
             final_sizes[_len - 1]
             * final_sizes[_len - 2]
