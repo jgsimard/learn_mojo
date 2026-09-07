@@ -7,25 +7,30 @@ from aoc.aoc_utils import input_paths, basic_bench
 def day1[p: Int](file_path: String) raises -> Int:
     var pos = 50
     var n_zero = 0
-    for line in open(file_path, "r").read().split("\n"):
-        if line.byte_length() == 0:
-            continue
+    with open(file_path, "r") as f:
+        var content = f.read()
+        var bytes = content.as_bytes()
+        var i = 0
+        while i < len(bytes):
+            var right = bytes[i] == UInt8(ord("R"))
+            i += 1
+            var mag = 0
+            while i < len(bytes) and bytes[i] != UInt8(ord("\n")):
+                mag = 10 * mag + Int(bytes[i]) - Int(ord("0"))
+                i += 1
+            i += 1
 
-        var dir = -1 if line.as_bytes()[0] == UInt8(ord("L")) else 1
-        var mag = atol(line[byte=1:])
+            comptime if p == 2:
+                n_zero += mag // 100
+                mag %= 100
+                if (right and mag + pos > 100) or (
+                    not right and mag > pos and pos != 0
+                ):
+                    n_zero += 1
 
-        if p == 2:
-            n_zero += mag // 100
-            mag = mag % 100
-
-            if (dir == -1 and mag > pos and pos != 0) or (
-                dir == 1 and mag + pos > 100
-            ):
+            pos = (pos + mag if right else pos - mag) % 100
+            if pos == 0:
                 n_zero += 1
-
-        pos = (pos + dir * mag) % 100
-        if pos == 0:
-            n_zero += 1
 
     return n_zero
 
