@@ -5,6 +5,14 @@ from std.benchmark import run, Unit
 comptime aoc_base_path = "/home/jgs/dev/mojo/learn_mojo/aoc"
 
 
+@always_inline
+def _get_line[
+    origin: ImmOrigin
+](lines: List[StringSlice[origin]], idx: Int) -> StringSlice[origin]:
+    """Return a copied slice without capturing the list's interior origin."""
+    return lines[idx]
+
+
 def input_paths[year: Int, day: Int]() -> Tuple[String, String]:
     var test_file_path = String(t"{aoc_base_path}/{year}/d{day}/test_input.txt")
     var file_path = String(t"{aoc_base_path}/{year}/d{day}/input.txt")
@@ -23,16 +31,16 @@ def sum_file[
         comptime if parallel:
             var total = Atomic[Int](0)
 
-            def worker(idx: Int) capturing:
+            def worker(idx: Int) {mut total, imm}:
                 try:
-                    var line = lines[idx]
+                    var line = _get_line(lines, idx)
                     if line.byte_length() == 0:
                         return
                     _ = total.fetch_add(Scalar[DType.int](process_fn(line)))
                 except:
                     pass
 
-            parallelize[worker](len(lines))
+            parallelize(worker, len(lines))
 
             return Int(total.load())
 

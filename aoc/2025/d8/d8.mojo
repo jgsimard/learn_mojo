@@ -1,6 +1,5 @@
 from std.testing import assert_equal
 from std.benchmark import run, Unit
-from std.memory import memset_zero
 from std.utils.numerics import max_finite
 
 from aoc.aoc_utils import input_paths, basic_bench
