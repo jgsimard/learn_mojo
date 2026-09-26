@@ -362,8 +362,8 @@ def process_chunk[
                     semicolons & search_mask
                 )
                 var city_len = pos + Int(semicolon_idx) - line_start
-                var hash_city = hash(
-                    data_ptr.unsafe_offset(line_start), city_len
+                var hash_city = hash_bytes(
+                    data[line_start : line_start + city_len]
                 )
 
                 # parse value
@@ -509,7 +509,7 @@ def process_chunk_fast[
                 signature *= 0xFF51AFD7ED558CCD
                 hash_city = signature ^ (signature >> 33)
             else:
-                hash_city = hash(data_ptr.unsafe_offset(line_start), city_len)
+                hash_city = hash_bytes(data[line_start : line_start + city_len])
 
             var val_start_idx = Scalar[bits_type](pos) + semicolon_idx + 1
             var num_len = newline_idx - (semicolon_idx + 1)
@@ -955,7 +955,7 @@ def process_1brc[version: Int](file_path: String) raises -> String:
             process_chunk[simd_parsing=False](
                 data, 0, len(data) - 1, d, city_names
             )
-        return format_output(d, city_names)
+            return format_output(d, city_names)
 
     elif version == 3:
         var d = Dict[UInt64, MeasurementInt](capacity=1024)
@@ -966,8 +966,7 @@ def process_1brc[version: Int](file_path: String) raises -> String:
             var bytes = file.read_bytes()
             var data = Span[UInt8, ImmutAnyOrigin](bytes)
             process_chunk(data, 0, len(data) - 1, d, city_names)
-
-        return format_output(d, city_names)
+            return format_output(d, city_names)
 
     elif version == 4:
         with open(file_path, "r") as file:
@@ -1012,7 +1011,7 @@ def process_1brc[version: Int](file_path: String) raises -> String:
 def main() raises:
     comptime file_path = "./measurements.txt"
     comptime hash_1M = 7830574609753597440
-    comptime hash_100M = 7465477878325822113
+    # comptime hash_100M = 7465477878325822113
 
     print("1BRC Unified Implementation")
     print("Cores:", num_physical_cores())
@@ -1026,22 +1025,22 @@ def main() raises:
         with open("output/v{}.txt".format(v), "w") as f:
             f.write(result)
 
-        # assert_equal(result_hash, hash_1M)
-        assert_equal(result_hash, hash_100M)
+        assert_equal(result_hash, hash_1M)
+        # assert_equal(result_hash, hash_100M)
 
         print(t"v{v} : correct hash")
 
-    # test[0]()
-    # test[1]()
-    # test[2]()
-    # test[3]()
-    # test[4]()
-    # test[5]()
-    # test[6]()
-    # test[7]()
-    # test[8]()
-    # test[9]()
-    # test[10]()
+    test[0]()
+    test[1]()
+    test[2]()
+    test[3]()
+    test[4]()
+    test[5]()
+    test[6]()
+    test[7]()
+    test[8]()
+    test[9]()
+    test[10]()
 
     print("Benchmarking...")
 
@@ -1053,10 +1052,10 @@ def main() raises:
         def bench_fn() raises:
             _ = process_1brc[v](file_path)
 
-        var time_ms = round(run(bench_fn, max_iters=10).mean(Unit.ms), 1)
+        var time_ms = round(run(bench_fn, max_iters=10).mean(Unit.ms), 2)
         if base_time and prev_time:
-            var vs_prev = round(prev_time.value() / time_ms, 1)
-            var vs_base = round(base_time.value() / time_ms, 1)
+            var vs_prev = round(prev_time.value() / time_ms, 2)
+            var vs_base = round(base_time.value() / time_ms, 2)
             print(t"v{v} : {time_ms} ms, {vs_prev} X prev, {vs_base} X base")
         else:
             print(t"v{v} : {time_ms} ms")
@@ -1072,5 +1071,6 @@ def main() raises:
     # var t5 = bench[5]()
     var t6 = bench[6](t0, t5)
     var t7 = bench[7](t0, t6)
-    var t9 = bench[9](t0, t7)
+    var t8 = bench[8](t0, t7)
+    var t9 = bench[9](t0, t8)
     var t10 = bench[10](t0, t9)
